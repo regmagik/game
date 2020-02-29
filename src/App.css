@@ -1,6 +1,61 @@
-.App {
-  text-align: center;
+.row{
+	border: 1px solid blue;
+	position: fixed;
+	width:100%;
 }
+
+.battle{
+	border: 1px dotted grey;
+	position: relative;
+	height: 22vmin;
+	width:500px;
+	margin:auto;
+}
+.cat{
+	border: 1px dotted black;
+	border-radius: 15px;
+	position: absolute;
+	height: 30px;
+	width:30px;
+right: 10px;
+bottom: 2vmin;
+}
+.doge{
+	border: 1px dotted red;
+	border-radius: 10px;
+	position: absolute;
+	height: 30px;
+	width:40px;
+right: 10px;
+bottom: 2vmin;
+}
+
+.CatBase {
+	text-align: center;
+	height: 20vmin;
+	min-width: 100px; 
+	width: 120px; 
+	position: absolute;
+	right:10px;
+	border-color: #61dafb;
+	border-width: 1;
+	border-style: solid;
+  }
+  
+  .EnemyBase {
+	text-align: center;
+	height: 20vmin;
+	min-width: 100px; 
+	width: 120px; 
+	position: absolute;
+	left:10px;
+	border-color: red;
+	border-width: 1;
+	border-style: solid;
+  }
+	.App {
+	text-align: center;
+  }
 
 .App-logo {
   height: 40vmin;
@@ -15,7 +70,7 @@
 
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
+  min-height: 10vh;
   display: flex;
   flex-direction: column;
   align-items: center;
