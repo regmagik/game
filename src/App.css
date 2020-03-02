@@ -14,11 +14,13 @@
 .cat{
 	border: 1px dotted black;
 	border-radius: 15px;
+	background-color: yellow;
+	background-size: contain;
 	position: absolute;
 	height: 30px;
-	width:30px;
-right: 10px;
 bottom: 2vmin;
+-webkit-transition: right 1s; 
+  transition: right 1s;
 }
 .doge{
 	border: 1px dotted red;
@@ -28,6 +30,8 @@ bottom: 2vmin;
 	width:40px;
 right: 10px;
 bottom: 2vmin;
+-webkit-transition: left 1s; 
+  transition: left 1s;
 }
 
 .CatBase {
@@ -50,7 +54,7 @@ bottom: 2vmin;
 	position: absolute;
 	left:10px;
 	border-color: red;
-	border-width: 1;
+	border-width: 1px;
 	border-style: solid;
   }
 	.App {
