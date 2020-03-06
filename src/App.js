@@ -24,11 +24,9 @@ function App() {
 	{
 		setTime(0)
 		setPosition(initialPos)
-//		setCatX(initialCatX)
-//		setDogX(1)
 		setBefore(false);
 		setBattle(true);
-		document.timer = setInterval(()=>setTime(moveAll), 1000);
+		document.timer = setInterval(()=>setTime(moveAll), 300);
 	}
 
 	// React.useEffect( () => {
@@ -75,19 +73,22 @@ function App() {
 	var catStyle = {
 		right: position.catX,
 		width: catWidth,
-		backgroundImage:'url("http://www.regmagik.com/download.gif")',
+//		backgroundImage:'url("http://www.regmagik.com/download.gif")',
+//		backgroundImage:time%2 ? 'url("cat2.png")':'url("cat1.png")',
+		backgroundImage:time%2 ? 'url("cat3.png")':'url("cat4.png")',
 	};
-	const cat = <div className="cat" style={catStyle}>&nbsp;</div>
+	const cat = <div className="cat" style={catStyle}></div>
 	
 	function moveDog() {
 		setPosition(getNextDogPos)
 	}
 	var dogStyle = {
-		background: "content-box radial-gradient(crimson, skyblue)",
-		left: position.dogX,
+//		background: "content-box radial-gradient(skyblue, crimson)",
+	backgroundImage:time%2 ? 'url("dog1.png")':'url("dog2.png")',
+	left: position.dogX,
 		width: dogWidth
 	};
-	const doge = <div className="doge" style = {dogStyle}>doge</div>
+	const doge = <div className="doge" style = {dogStyle}></div>
 
 	const enemyButton = <button onClick={moveDog}>Doge</button>
 	const catButton = <button onClick={moveCat}>Cat</button>

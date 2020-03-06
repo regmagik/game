@@ -12,10 +12,8 @@
 	margin:auto;
 }
 .cat{
-	border: 1px dotted black;
-	border-radius: 15px;
-	background-color: yellow;
 	background-size: contain;
+	background-repeat: no-repeat;
 	position: absolute;
 	height: 30px;
 bottom: 2vmin;
@@ -23,9 +21,11 @@ bottom: 2vmin;
   transition: right 1s;
 }
 .doge{
-	border: 1px dotted red;
+	background-size: contain;
+	background-repeat: no-repeat;
+/*	border: 1px dotted red;
 	border-radius: 10px;
-	position: absolute;
+*/	position: absolute;
 	height: 30px;
 	width:40px;
 right: 10px;
@@ -42,7 +42,7 @@ bottom: 2vmin;
 	position: absolute;
 	right:10px;
 	border-color: #61dafb;
-	border-width: 1;
+	border-width: 1px;
 	border-style: solid;
   }
   
