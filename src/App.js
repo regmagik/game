@@ -1,21 +1,54 @@
 import React, { useState } from 'react';
-import logo from './logo.svg';
+//import logo from './logo.svg';
 import './App.css';
+
+function Cat(props) {
+	const style = {
+		width:props.cat.width,
+		height:props.cat.height,
+		right: props.cat.catX,
+		backgroundImage:`url('cat${props.cat.type}.png')`,
+		backgroundSize: "contain",
+		backgroundRepeat: "no-repeat"
+	}
+	return <div className="cat" style={style}/>
+}
+
+
+function CatButton(props) {
+	function onAdd(){
+		props.addCat(props.type)
+	}
+	const buttonStyle = {
+		width:30,
+		height:20,
+		backgroundImage:`url('cat${props.type.type}.png')`,
+		backgroundSize: "contain",
+		backgroundRepeat: "no-repeat",
+		float:"left"
+	}
+	return <div style={buttonStyle} onClick={onAdd}/>
+}
 
 function App() {
 	const screenWidth = 500;
-	const speed = 25;
-	const dogSpeed = 10;
+	const speed = 5;
+	const dogSpeed = 3;
 	const range = 20;
 	const initialX = 75;
 	const catWidth = 30;
 	const dogWidth = 50;
+
+	const aCat = {type:"A", width:30, height:20, speed:2}
+	const catTypes = [aCat, {...aCat, type:"B", height:40, speed:1}, {...aCat, type:"C", speed:3}];
 	const initialPos = {
+		cats: [{...aCat, catX:initialX+33}],
 		catX: initialX,
 		dogX: initialX
 	}
-	const [beforeBattle, setBefore] = useState(true);
-	const [inBattle, setBattle] = useState(false);
+
+	const [beforeBattle, setBefore] = useState(false);
+	const [inBattle, setBattle] = useState(true);
 	const [position, setPosition] = useState(initialPos);
 	const [time, setTime] = useState(0);
 //	const [items, setItems] = useState([{x:11}]);
@@ -53,7 +86,10 @@ function App() {
 	}
 	function getNextCatPos(x)
 	{
-		return  withinRange(x) ? x : {...x, catX:x.catX + speed} ; 
+		return {...x, 
+			catX:x.catX + speed,
+			cats:x.cats.map((cat)=>({...cat, catX:cat.catX + cat.speed}))
+		} ; 
 	}
 	function getNextDogPos(x)
 	{
@@ -90,25 +126,35 @@ function App() {
 	};
 	const doge = <div className="doge" style = {dogStyle}></div>
 
+	function addCat(e){
+		console.log("add cat", e);
+		position.cats.push({...aCat, catX:initialX });
+	}
+
 	const enemyButton = <button onClick={moveDog}>Doge</button>
-	const catButton = <button onClick={moveCat}>Cat</button>
+	const catButton = <button onClick={addCat}>Cat</button>
+	const catButtons = catTypes.map((cat, i)=><CatButton type={cat} addCat={addCat} key={i}/>);
+	const cats = position.cats.map((cat, i)=><Cat cat={cat} key={i}/>);
 
 	const battle = inBattle?		
 		<div className="row">
 			<div>Time:{time}</div>
 			<div className="battle">
 				<div className="CatBase">
-					Cat Base {position.catX}
+					Cat 
 					{catButton}
-					{cat}
+					{cats}
 				</div>
 				<div className="EnemyBase">
 					{enemyButton}
-					Enemy Base {position.dogX}
+					Enemy
 					{doge}
 				</div>
 			</div>
 			<div>
+				<div>
+					{catButtons}
+				</div>
 			</div>
 		</div> 
 		: null;
