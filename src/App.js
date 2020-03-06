@@ -59,7 +59,7 @@ function App() {
 		setPosition(initialPos)
 		setBefore(false);
 		setBattle(true);
-		document.timer = setInterval(()=>setTime(moveAll), 300);
+		document.timer = setInterval(()=>setTime(moveAll), 500);
 	}
 
 	// React.useEffect( () => {
@@ -104,12 +104,11 @@ function App() {
 		<button onClick={startBattle}>Attack</button>
 		: null;	
 	
-	const victory = 	<p>Victory!</p>
+//	const victory = 	<p>Victory!</p>
 
 	var catStyle = {
 		right: position.catX,
 		width: catWidth,
-//		backgroundImage:'url("http://www.regmagik.com/download.gif")',
 //		backgroundImage:time%2 ? 'url("cat2.png")':'url("cat1.png")',
 		backgroundImage:time%2 ? 'url("cat3.png")':'url("cat4.png")',
 	};
@@ -126,9 +125,9 @@ function App() {
 	};
 	const doge = <div className="doge" style = {dogStyle}></div>
 
-	function addCat(e){
-		console.log("add cat", e);
-		position.cats.push({...aCat, catX:initialX });
+	function addCat(type){
+		console.log("add cat", type);
+		position.cats.push({...type, catX:initialX });
 	}
 
 	const enemyButton = <button onClick={moveDog}>Doge</button>
