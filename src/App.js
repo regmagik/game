@@ -7,7 +7,7 @@ function Cat(props) {
 		width:props.cat.width,
 		height:props.cat.height,
 		right: props.cat.catX,
-		backgroundImage:`url('cat${props.cat.type}.png')`,
+		backgroundImage:`url('cat${props.cat.type}${props.cat.catX%2?'2':''}.png')`,
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat"
 	}
@@ -39,8 +39,8 @@ function App() {
 	const catWidth = 30;
 	const dogWidth = 50;
 
-	const aCat = {type:"A", width:30, height:20, speed:2}
-	const catTypes = [aCat, {...aCat, type:"B", height:40, speed:1}, {...aCat, type:"C", speed:3}];
+	const aCat = {type:"A", width:30, height:20, speed:3}
+	const catTypes = [aCat, {...aCat, type:"B", height:40, speed:1}, {...aCat, type:"C", speed:5}];
 	const initialPos = {
 		cats: [{...aCat, catX:initialX+33}],
 		catX: initialX,
@@ -87,7 +87,6 @@ function App() {
 	function getNextCatPos(x)
 	{
 		return {...x, 
-			catX:x.catX + speed,
 			cats:x.cats.map((cat)=>({...cat, catX:cat.catX + cat.speed}))
 		} ; 
 	}
