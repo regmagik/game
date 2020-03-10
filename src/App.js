@@ -13,6 +13,17 @@ function Cat(props) {
 	}
 	return <div className="cat" style={style}/>
 }
+function Enemy(props) {
+	const style = {
+		width:props.enemy.width,
+		height:props.enemy.height,
+		left: props.enemy.x,
+		backgroundImage:`url('enemy${props.enemy.type}${props.enemy.x%2?'2':''}.png')`,
+		backgroundSize: "contain",
+		backgroundRepeat: "no-repeat"
+	}
+	return <div className="doge" style={style}/>
+}
 
 
 function CatButton(props) {
@@ -25,33 +36,41 @@ function CatButton(props) {
 		backgroundImage:`url('cat${props.type.type}.png')`,
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat",
+		float:"right"
+	}
+	return <div style={buttonStyle} onClick={onAdd}/>
+}
+function EnemyButton(props) {
+	function onAdd(){
+		props.addEnemy(props.type)
+	}
+	const buttonStyle = {
+		width:30,
+		height:20,
+		backgroundImage:`url('enemy${props.type.type}.png')`,
+		backgroundSize: "contain",
+		backgroundRepeat: "no-repeat",
 		float:"left"
 	}
 	return <div style={buttonStyle} onClick={onAdd}/>
 }
-
 function App() {
 	const screenWidth = 500;
-	const speed = 5;
-	const dogSpeed = 3;
 	const range = 20;
 	const initialX = 75;
-	const catWidth = 30;
-	const dogWidth = 50;
-
+	const anEnemy ={type:"doge", width:30, height:20, speed:3}
+	const enemyTypes = [anEnemy, {...anEnemy, type:"snache", height:20, speed:5}, {...anEnemy, type:"Croco", speed:6}];
 	const aCat = {type:"A", width:30, height:20, speed:3}
 	const catTypes = [aCat, {...aCat, type:"B", height:40, speed:1}, {...aCat, type:"C", speed:5}];
 	const initialPos = {
 		cats: [{...aCat, catX:initialX+33}],
-		catX: initialX,
-		dogX: initialX
+		enemies: [{...anEnemy, x:initialX+33}],
 	}
 
 	const [beforeBattle, setBefore] = useState(false);
 	const [inBattle, setBattle] = useState(true);
 	const [position, setPosition] = useState(initialPos);
 	const [time, setTime] = useState(0);
-//	const [items, setItems] = useState([{x:11}]);
 
 	function startBattle()
 	{
@@ -79,20 +98,25 @@ function App() {
 		moveDog();
 		return x+1;
 	}
-	// determine if the can and dog would be within range after move
-	function withinRange(x)
+	// determine if the units would be within range after move
+	function withinRange(cat, enemy)
 	{
-		return screenWidth - (x.catX + x.dogX + catWidth + dogWidth + speed + dogSpeed) < range;
+		return screenWidth - (cat.catX + enemy.x + cat.width + enemy.width + cat.speed + enemy.speed) < range;
+	}
+	// determine if any unit in the array would be within cat range after move
+	function anyUnitWithinRange(cat, enemyUnits)
+	{
+		return enemyUnits.some((unit)=>withinRange(cat, unit));
 	}
 	function getNextCatPos(x)
 	{
 		return {...x, 
-			cats:x.cats.map((cat)=>({...cat, catX:cat.catX + cat.speed}))
+			cats:x.cats.map((cat)=>(anyUnitWithinRange(cat, x.enemies) ? cat : {...cat, catX:cat.catX + cat.speed}))
 		} ; 
 	}
 	function getNextDogPos(x)
 	{
-		return  withinRange(x) ? x : {...x, dogX:x.dogX + dogSpeed} ; 
+		return {...x, enemies:x.enemies.map( (unit)=>({...unit, x:unit.x + unit.speed}))}; 
 	}
 	function moveCat()
 	{
@@ -104,35 +128,24 @@ function App() {
 		: null;	
 	
 //	const victory = 	<p>Victory!</p>
-
-	var catStyle = {
-		right: position.catX,
-		width: catWidth,
-//		backgroundImage:time%2 ? 'url("cat2.png")':'url("cat1.png")',
-		backgroundImage:time%2 ? 'url("cat3.png")':'url("cat4.png")',
-	};
-	const cat = <div className="cat" style={catStyle}></div>
 	
 	function moveDog() {
 		setPosition(getNextDogPos)
 	}
-	var dogStyle = {
-//		background: "content-box radial-gradient(skyblue, crimson)",
-	backgroundImage:time%2 ? 'url("dog1.png")':'url("dog2.png")',
-	left: position.dogX,
-		width: dogWidth
-	};
-	const doge = <div className="doge" style = {dogStyle}></div>
 
 	function addCat(type){
 		console.log("add cat", type);
 		position.cats.push({...type, catX:initialX });
 	}
+	function addEnemy(type){
+		console.log("add enemy", type);
+		position.enemies.push({...type, x:initialX });
+	}
 
-	const enemyButton = <button onClick={moveDog}>Doge</button>
-	const catButton = <button onClick={addCat}>Cat</button>
+	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
 	const catButtons = catTypes.map((cat, i)=><CatButton type={cat} addCat={addCat} key={i}/>);
 	const cats = position.cats.map((cat, i)=><Cat cat={cat} key={i}/>);
+	const enemies = position.enemies.map((enemy, i)=><Enemy enemy={enemy} key={i}/>);
 
 	const battle = inBattle?		
 		<div className="row">
@@ -140,18 +153,18 @@ function App() {
 			<div className="battle">
 				<div className="CatBase">
 					Cat 
-					{catButton}
 					{cats}
 				</div>
 				<div className="EnemyBase">
-					{enemyButton}
 					Enemy
-					{doge}
+					{enemies}
+				
 				</div>
 			</div>
 			<div>
 				<div>
 					{catButtons}
+					{enemyButtons}
 				</div>
 			</div>
 		</div> 
