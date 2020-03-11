@@ -21,7 +21,8 @@ function Cat(props) {
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat"
 	}
-	return <div className="cat" style={style}/>
+//	return <div className="cat" style={style}> <div>{props.cat.health}</div> </div>
+	return <div className="cat" style={style}></div>
 }
 function Enemy(props) {
 	const style = {
@@ -74,8 +75,8 @@ function App() {
 	const aCat = {type:"A", width:30, height:20, speed:3, initialHealth:initialHealth}
 	const catTypes = [aCat, {...aCat, type:"B", height:40, speed:1}, {...aCat, type:"C", speed:5}];
 	const initialPos = {
-		cats: [{...aCat, x:initialX}],
-		enemies: [{...anEnemy, x:initialX}],
+		cats: [],
+		enemies: [],
 	}
 
 	const [beforeBattle, setBefore] = useState(true);
@@ -89,7 +90,35 @@ function App() {
 		setPosition(initialPos)
 		setBefore(false);
 		setBattle(true);
+		startTimer();
+	}
+
+	function pauseBattle()
+	{
+		stopTimer();
+	}
+
+	function resumeBattle()
+	{
+		startTimer();
+	}
+
+	function leaveBattle()
+	{
+		stopTimer();
+		setBefore(true);
+		setBattle(false);
+	}
+
+	function startTimer()
+	{
 		document.timer = setInterval(()=>setTime(moveAll), 500);
+	}
+	function stopTimer()
+	{
+		if(document.timer === undefined) return;
+		clearInterval(document.timer);
+		document.timer = undefined;
 	}
 
 	// React.useEffect( () => {
@@ -107,6 +136,7 @@ function App() {
 	{
 		moveCat();
 		moveDog();
+		setPosition(attack);
 		return x+1;
 	}
 	// determine if the units would be within range after move
@@ -129,13 +159,25 @@ function App() {
 	{
 		return {...x, 
 			enemies:x.enemies.map( (unit)=>(anyUnitWithinRange(unit, x.cats) ? unit : {...unit, x:unit.x + unit.speed}))}; 
-	}
+		}
+		function calculateDamage({cats, enemies})
+		{
+			// for each cat find all enemies within range and attack them (the first or all within the range)
+			// for each enemy find all cats in range and attack them
+
+			let newCats = cats.map((cat)=>({...cat, health: cat.health - 10 }))
+			return {cats:newCats, enemies};
+		}
+		function attack(x)
+		{
+				return {...x, ...calculateDamage(x)}; 
+	} 
 	function moveCat()
 	{
 		setPosition(getNextCatPos)
 	}
 
-	const attack = beforeBattle?
+	const attackButton = beforeBattle?
 		<button onClick={startBattle}>Attack</button>
 		: null;	
 	
@@ -180,20 +222,18 @@ function App() {
 		</div> 
 		: null;
 		const back = inBattle?
-			<button onClick={leaveBattle}>Back</button>	: null;	
-		function leaveBattle()
-		{
-			if(document.timer !== undefined) clearInterval(document.timer);
-			setBefore(true);
-			setBattle(false);
-		}
+		<>
+		<button onClick={pauseBattle}>Pause</button>	
+		<button onClick={resumeBattle}>Resume</button>	
+		<button onClick={leaveBattle}>Back</button>	
+		</> : null;	
 		
   return (
     <div className="App">
       	<header className="App-header">
 		  	Battle Cats Labs
 	  	</header>
-		{attack}
+		{attackButton}
 		{back}
 		{battle}
 	</div>
