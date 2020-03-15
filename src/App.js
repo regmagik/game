@@ -13,6 +13,13 @@ function CatBase(props) {
 	}
 	return <div className="CatBase" style={style}>{props.children}</div>
 }
+function EnemyBase(props) {
+	const style = {
+		width:baseWidth,height:baseHeight, left:baseX, bottom: baseBottom,
+		backgroundImage:"url('leftbase.png')"
+	}
+	return <div className="EnemyBase" style={style}>{props.children}</div>
+}
 function Cat(props) {
 	const style = {
 		width:props.cat.width,
@@ -68,16 +75,15 @@ function EnemyButton(props) {
 }
 function App() {
 	const screenWidth = 300;
-	const range = 10;
 	const initialX = 25;
 	const initialHealth = 100;
-	const unit = {width:30, height:20, speed:3, initialHealth:initialHealth, pushBacks:10, attackRange:5, attackPower:1};
+	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, pushBacks:6, attackRange:2, attackPower:1};
 	const anEnemy ={...unit, type:"Doge"}
 	const enemyTypes = [anEnemy, 
-		{...anEnemy, type:"Snache", height:20, speed:5}, 
-		{...anEnemy, type:"Croco", speed:7}];
+		{...anEnemy, type:"Snache", width:40, height:15, speed:5}, 
+		{...anEnemy, type:"Croco", width:35, height:15, speed:3}];
 	const aCat = {...unit, type:"A"}
-	const catTypes = [aCat, {...aCat, type:"B", height:40, speed:1}, {...aCat, type:"C", speed:5}];
+	const catTypes = [aCat, {...aCat, type:"B", height:30, speed:1}, {...aCat, type:"C", speed:5}];
 	const initialPos = {
 		cats: [],
 		enemies: [],
@@ -116,7 +122,8 @@ function App() {
 
 	function startTimer()
 	{
-		document.timer = setInterval(()=>setTime(moveAll), 500);
+		if(document.timer === undefined)
+			document.timer = setInterval(()=>setTime(moveAll), 800);
 	}
 	function stopTimer()
 	{
@@ -217,10 +224,9 @@ function App() {
 				<CatBase>
 					{cats}
 				</CatBase>
-				<div className="EnemyBase">
-					Enemy
+				<EnemyBase>
 					{enemies}
-				</div>
+				</EnemyBase>
 			</div>
 			<div>
 				<div>

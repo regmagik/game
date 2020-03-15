@@ -8,14 +8,13 @@
 	border: 1px dotted grey;
 	position: relative;
 	height: 22vmin;
-	width:330px;
+	width:300px;
 	margin:auto;
 }
 .cat{
 	background-size: contain;
 	background-repeat: no-repeat;
 	position: absolute;
-bottom: 2vmin;
 -webkit-transition: right 1s; 
   transition: right 1s;
 }
@@ -23,8 +22,6 @@ bottom: 2vmin;
 	background-size: contain;
 	background-repeat: no-repeat;
 	position: absolute;
-right: 10px;
-bottom: 2vmin;
 -webkit-transition: left 1s; 
   transition: left 1s;
 }
@@ -34,23 +31,16 @@ bottom: 2vmin;
 	position: absolute;
 	background-size: contain;
 	background-repeat: no-repeat;
-	border-color: red;
-	border-width: 1px;
-	border-style: solid;
 }
   
 .EnemyBase {
 	text-align: center;
-	height: 20vmin;
-	min-width: 100px; 
-	width: 120px; 
 	position: absolute;
-	left:10px;
-	border-color: red;
-	border-width: 1px;
-	border-style: solid;
+	background-size: contain;
+	background-repeat: no-repeat;
   }
-	.App {
+
+  .App {
 	text-align: center;
   }
 
