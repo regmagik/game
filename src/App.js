@@ -25,12 +25,13 @@ function Cat(props) {
 		width:props.cat.width,
 		height:props.cat.height,
 		right: props.cat.x, bottom: baseBottom,
-		backgroundImage:`url('cat${props.cat.type}${props.cat.x%2?'2':''}.png')`,
+		backgroundImage:`url('cat${props.cat.type}${props.cat.x%2 && !props.cat.isAttacking ? '2':''}${props.cat.isAttacking?'Attack':''}.png')`,
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat"
 	}
-//	return <div className="cat" style={style}> <div>{props.cat.health}</div> </div>
-	return <div className="cat" style={style}></div>
+	if(props.cat.isAttacking) console.log(props.cat.type, "Attack");
+	return <div className="cat" style={style}> <div>{props.cat.health}</div> </div>
+	// return <div className="cat" style={style}></div>
 }
 function Enemy(props) {
 	const style = {
@@ -151,9 +152,9 @@ function App() {
 		return x+1;
 	}
 	// determine if the units would be within range after move
-	function withinRange(unit, enemy)
+	function withinRange(unit, target)
 	{
-		return screenWidth - baseX - (unit.x + enemy.x + unit.width + enemy.width + unit.speed + enemy.speed) < unit.attackRange;
+		return screenWidth - baseX - (unit.x + target.x + unit.width + target.width + unit.speed + target.speed) < unit.attackRange;
 	}
 	//check if the unit is close to opposite base
 	function canAttackBase(unit)
@@ -168,25 +169,39 @@ function App() {
 	function getNextCatPos(x)
 	{
 		return {...x, 
-			cats:x.cats.map((cat)=>(anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? cat : {...cat, x:cat.x + cat.speed}))
+			cats:x.cats.map((cat)=>(anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? {...cat, isAttacking:true} : {...cat, x:cat.x + cat.speed}))
 		} ; 
 	}
 	function getNextDogPos(x)
 	{
 		return {...x, 
-			enemies:x.enemies.map( (unit)=>(anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? unit : {...unit, x:unit.x + unit.speed}))}; 
-		}
-		function calculateDamage({cats, enemies})
-		{
-			// for each cat find all enemies within range and attack them (the first or all within the range)
-			// for each enemy find all cats in range and attack them
+			enemies:x.enemies.map( (unit)=>
+		(anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? {...unit, isAttacking:true} : {...unit, x:unit.x + unit.speed}))};
+	}
 
-			let newCats = cats.map((cat)=>({...cat, health: cat.health - 10 }))
-			return {cats:newCats, enemies};
-		}
-		function attack(x)
-		{
-				return {...x, ...calculateDamage(x)}; 
+	function canAttack(unit, target)
+	{
+		return withinRange(unit, target);
+	}
+
+	function damageCat(cat, {cats, enemies})
+	{
+		const attackers = enemies.filter((unit)=>canAttack(unit, cat));
+		return {...cat, health: cat.health - 2 * attackers.length }
+	}
+
+	function calculateHealth({cats, enemies})
+	{
+		// for each cat find all enemies within range and attack them (the first or all within the range)
+		// for each enemy find all cats in range and attack them
+		let newCats = cats.map((cat)=>damageCat(cat, {cats, enemies}))
+		var filtered = newCats.filter(function(unit){ return unit.health > 0;});
+
+		return {cats:filtered, enemies};
+	}
+	function attack(x)
+	{
+		return {...x, ...calculateHealth(x)}; 
 	} 
 	function moveCat()
 	{
