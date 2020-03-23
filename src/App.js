@@ -77,14 +77,14 @@ function EnemyButton(props) {
 function App() {
 	const screenWidth = 300;
 	const initialX = 25;
-	const initialHealth = 100;
-	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, pushBacks:6, attackRange:2, attackPower:1};
+	const initialHealth = 50;
+	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:6, attackRange:2, attackPower:1};
 	const anEnemy ={...unit, type:"Doge"}
 	const enemyTypes = [anEnemy, 
-		{...anEnemy, type:"Snache", width:40, height:15, speed:5}, 
-		{...anEnemy, type:"Croco", width:35, height:15, speed:3}];
-	const aCat = {...unit, type:"A"}
-	const catTypes = [aCat, {...aCat, type:"B", height:30, speed:1}, {...aCat, type:"C", speed:5}];
+		{...anEnemy, type:"Snache", width:40, height:15, speed:5, attackPower:2}, 
+		{...anEnemy, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
+	const aCat = {...unit, type:"A", attackPower:3}
+	const catTypes = [aCat, {...aCat, type:"B", height:30, speed:1, attackPower:1, initialHealth:2*initialHealth}, {...aCat, type:"C", speed:5}];
 	const initialPos = {
 		cats: [],
 		enemies: [],
@@ -187,7 +187,11 @@ function App() {
 	function damageCat(cat, {cats, enemies})
 	{
 		const attackers = enemies.filter((unit)=>canAttack(unit, cat));
-		return {...cat, health: cat.health - 2 * attackers.length }
+		const damage = attackers.reduce(function (a, b) {
+			return b.attackPower == null ? a : a + b.attackPower;
+		}, 0)
+		console.log("damage", damage)
+		return {...cat, health: cat.health - damage }
 	}
 
 	function calculateHealth({cats, enemies})
