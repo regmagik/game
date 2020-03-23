@@ -42,7 +42,7 @@ function Enemy(props) {
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat"
 	}
-	return <div className="doge" style={style}/>
+	return <div className="enemy" style={style}> <div>{props.enemy.health}</div> </div>
 }
 
 
@@ -199,10 +199,26 @@ function App() {
 		// for each cat find all enemies within range and attack them (the first or all within the range)
 		// for each enemy find all cats in range and attack them
 		let newCats = cats.map((cat)=>damageCat(cat, {cats, enemies}))
-		var filtered = newCats.filter(function(unit){ return unit.health > 0;});
-
-		return {cats:filtered, enemies};
+		let newEnemies = enemies.map((enemy)=>damageEnemy(enemy, {cats, enemies}))
+		var filteredCats = newCats.filter(function(unit){ return unit.health > 0;});
+		var filteredEnemies = newEnemies.filter(function(unit){ return unit.health > 0;});
+		return {cats:filteredCats, enemies:filteredEnemies};
 	}
+	function attack(x)
+	{
+		return {...x, ...calculateHealth(x)}; 
+	} 
+
+	function damageEnemy(enemy, {cats, enemies})
+	{
+		const attackers = cats.filter((unit)=>canAttack(unit, enemy));
+		const damage = attackers.reduce(function (a, b) {
+			return b.attackPower == null ? a : a + b.attackPower;
+		}, 0)
+		console.log("damage", damage)
+		return {...enemy, health: enemy.health - damage }
+	}
+
 	function attack(x)
 	{
 		return {...x, ...calculateHealth(x)}; 
