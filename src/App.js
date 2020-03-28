@@ -11,20 +11,20 @@ function CatBase(props) {
 		width:baseWidth,height:baseHeight, right:baseX, bottom: baseBottom,
 		backgroundImage:"url('rightbase.png')"
 	}
-	return <div className="CatBase" style={style}>{props.children}<HealthBar health={props.health}/></div>
+	return <div className="CatBase" style={style}>{props.children}<HealthBar health={props.health} maxHealth={props.initialHealth}/></div>
 }
 function EnemyBase(props) {
 	const style = {
 		width:baseWidth,height:baseHeight, left:baseX, bottom: baseBottom,
 		backgroundImage:"url('leftbase.png')"
 	}
-	return <div className="EnemyBase" style={style}>{props.children}<HealthBar health={props.health}/></div>
+	return <div className="EnemyBase" style={style}>{props.children}<HealthBar health={props.health} maxHealth={props.initialHealth}/></div>
 }
-function HealthBar({health}) {
+function HealthBar({health, maxHealth}) {
 	const styleHealthBar = {
 		position:"absolute", top: -25
 	}
-	return <div style={styleHealthBar}>{health}</div>
+return <div style={styleHealthBar}>{health} / {maxHealth}</div>
 }
 function Cat(props) {
 	const style = {
@@ -36,7 +36,7 @@ function Cat(props) {
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat"
 	}
-	return <div className="cat" style={style}> <HealthBar health={props.cat.health}/> </div>
+	return <div className="cat" style={style}> <HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/> </div>
 }
 function Enemy(props) {
 	const style = {
@@ -47,7 +47,7 @@ function Enemy(props) {
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat"
 	}
-	return <div className="enemy" style={style}>  <HealthBar health={props.enemy.health}/> </div>
+	return <div className="enemy" style={style}>  <HealthBar health={props.enemy.health} maxHealth={props.enemy.initialHealth}/> </div>
 }
 
 
@@ -83,6 +83,7 @@ function App() {
 	const screenWidth = 300;
 	const initialX = 25;
 	const initialHealth = 50;
+	const initialBaseHealth = 500;
 	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:6, attackRange:2, attackPower:1};
 	const anEnemy ={...unit, type:"Doge"}
 	const enemyTypes = [anEnemy, 
@@ -93,6 +94,8 @@ function App() {
 	const initialPos = {
 		cats: [],
 		enemies: [],
+		catBaseHealth: initialBaseHealth,
+		enemyBaseHealth: initialBaseHealth
 	}
 
 	const [beforeBattle, setBefore] = useState(true);
@@ -129,7 +132,7 @@ function App() {
 	function startTimer()
 	{
 		if(document.timer === undefined)
-			document.timer = setInterval(()=>setTime(moveAll), 800);
+			document.timer = setInterval(()=>setTime(moveAll), 200);
 	}
 	function stopTimer()
 	{
@@ -218,10 +221,19 @@ function App() {
 		console.log("damage", damage)
 		return {...enemy, health: enemy.health - damage }
 	}
+	function damageBase(units){
+		const attackers = units.filter((unit)=>canAttackBase(unit));
+		const damage = attackers.reduce(function (a, b) {
+			return b.attackPower == null ? a : a + b.attackPower;
+		}, 0)
+		return damage;
+	}
 
 	function attack(x)
 	{
-		return {...x, ...calculateHealth(x)}; 
+		return {...x, ...calculateHealth(x), 
+			catBaseHealth:x.catBaseHealth-damageBase(x.enemies), 
+			enemyBaseHealth:x.enemyBaseHealth-damageBase(x.cats)}; 
 	} 
 	function moveCat()
 	{
@@ -265,10 +277,10 @@ function App() {
 		<div className="row">
 			<div>Time:{time}</div>
 			<div className="battle">
-				<CatBase health="200">
+				<CatBase health={position.catBaseHealth} initialHealth={initialBaseHealth}>
 					{cats}
 				</CatBase>
-				<EnemyBase health="200">
+				<EnemyBase health={position.enemyBaseHealth} initialHealth={initialBaseHealth}>
 					{enemies}
 				</EnemyBase>
 			</div>
