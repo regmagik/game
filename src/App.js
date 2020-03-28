@@ -11,27 +11,32 @@ function CatBase(props) {
 		width:baseWidth,height:baseHeight, right:baseX, bottom: baseBottom,
 		backgroundImage:"url('rightbase.png')"
 	}
-	return <div className="CatBase" style={style}>{props.children}</div>
+	return <div className="CatBase" style={style}>{props.children}<HealthBar health={props.health}/></div>
 }
 function EnemyBase(props) {
 	const style = {
 		width:baseWidth,height:baseHeight, left:baseX, bottom: baseBottom,
 		backgroundImage:"url('leftbase.png')"
 	}
-	return <div className="EnemyBase" style={style}>{props.children}</div>
+	return <div className="EnemyBase" style={style}>{props.children}<HealthBar health={props.health}/></div>
+}
+function HealthBar({health}) {
+	const styleHealthBar = {
+		position:"absolute", top: -25
+	}
+	return <div style={styleHealthBar}>{health}</div>
 }
 function Cat(props) {
 	const style = {
 		width:props.cat.width,
 		height:props.cat.height,
 		right: props.cat.x, bottom: baseBottom,
-		backgroundImage:`url('cat${props.cat.type}${props.cat.x%2 && !props.cat.isAttacking ? '2':''}${props.cat.isAttacking?'Attack':''}.png')`,
+		backgroundImage:`url('cat${props.cat.type}${props.cat.x%2 && 
+			!props.cat.isAttacking ? '2':''}${props.cat.isAttacking?'Attack':''}.png')`,
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat"
 	}
-	if(props.cat.isAttacking) console.log(props.cat.type, "Attack");
-	return <div className="cat" style={style}> <div>{props.cat.health}</div> </div>
-	// return <div className="cat" style={style}></div>
+	return <div className="cat" style={style}> <HealthBar health={props.cat.health}/> </div>
 }
 function Enemy(props) {
 	const style = {
@@ -42,7 +47,7 @@ function Enemy(props) {
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat"
 	}
-	return <div className="enemy" style={style}> <div>{props.enemy.health}</div> </div>
+	return <div className="enemy" style={style}>  <HealthBar health={props.enemy.health}/> </div>
 }
 
 
@@ -204,11 +209,6 @@ function App() {
 		var filteredEnemies = newEnemies.filter(function(unit){ return unit.health > 0;});
 		return {cats:filteredCats, enemies:filteredEnemies};
 	}
-	function attack(x)
-	{
-		return {...x, ...calculateHealth(x)}; 
-	} 
-
 	function damageEnemy(enemy, {cats, enemies})
 	{
 		const attackers = cats.filter((unit)=>canAttack(unit, enemy));
@@ -237,29 +237,38 @@ function App() {
 	function moveDog() {
 		setPosition(getNextDogPos)
 	}
-
+	function nextCatid()
+	{
+		return position.cats.length ? Math.max(...position.cats.map(c=>c.id))+1 : 1;
+	}
+	function nextEnemyid()
+	{
+		return position.enemies.length ? Math.max(...position.enemies.map(e=>e.id))+1 : 10000;
+	}
 	function addCat(type){
 		console.log("add cat", type);
-		position.cats.push({...type, x:initialX, health:type.initialHealth });
+		position.cats.push({...type, x:initialX, health:type.initialHealth, id:nextCatid() });
 	}
 	function addEnemy(type){
 		console.log("add enemy", type);
-		position.enemies.push({...type, x:initialX, health:type.initialHealth });
+		position.enemies.push({...type, x:initialX, health:type.initialHealth, id:nextEnemyid() });
 	}
 
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
 	const catButtons = catTypes.map((cat, i)=><CatButton type={cat} addCat={addCat} key={i}/>);
-	const cats = position.cats.map((cat, i)=><Cat cat={cat} key={i}/>);
-	const enemies = position.enemies.map((enemy, i)=><Enemy enemy={enemy} key={i}/>);
+	
+	const cats = position.cats.map((cat)=><Cat cat={cat} key={cat.id}/>);
+
+	const enemies = position.enemies.map((enemy)=><Enemy enemy={enemy} key={enemy.id}/>);
 
 	const battle = inBattle?		
 		<div className="row">
 			<div>Time:{time}</div>
 			<div className="battle">
-				<CatBase>
+				<CatBase health="200">
 					{cats}
 				</CatBase>
-				<EnemyBase>
+				<EnemyBase health="200">
 					{enemies}
 				</EnemyBase>
 			</div>
