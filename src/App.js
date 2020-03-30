@@ -177,7 +177,7 @@ function App() {
 	function getNextCatPos(x)
 	{
 		return {...x, 
-			cats:x.cats.map((cat)=>(anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? {...cat, isAttacking:true} : {...cat, x:cat.x + cat.speed}))
+			cats:x.cats.map((cat)=>(anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? {...cat, isAttacking:true} : {...cat, isAttacking:false, x:cat.x + cat.speed}))
 		} ; 
 	}
 	function getNextDogPos(x)
