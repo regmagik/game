@@ -228,11 +228,13 @@ function App() {
 		}, 0)
 		return damage;
 	}
-
 	function attack(x)
 	{
+		let newCatBaseHealth = x.catBaseHealth-damageBase(x.enemies);
+		if(newCatBaseHealth < 0) newCatBaseHealth = 0;
+
 		return {...x, ...calculateHealth(x), 
-			catBaseHealth:x.catBaseHealth-damageBase(x.enemies), 
+			catBaseHealth:newCatBaseHealth, 
 			enemyBaseHealth:x.enemyBaseHealth-damageBase(x.cats)}; 
 	} 
 	function moveCat()
@@ -243,8 +245,6 @@ function App() {
 	const attackButton = beforeBattle?
 		<button onClick={startBattle}>Attack</button>
 		: null;	
-	
-//	const victory = 	<p>Victory!</p>
 	
 	function moveDog() {
 		setPosition(getNextDogPos)
@@ -268,9 +268,17 @@ function App() {
 
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
 	const catButtons = catTypes.map((cat, i)=><CatButton type={cat} addCat={addCat} key={i}/>);
+	const gameControls = <div>
+						{catButtons}
+						{enemyButtons}
+					</div>
+
+	const victory = <p>Victory!</p>;
+	const loss = <p>You lose!</p>;
+
+	const dashboard = position.catBaseHealth <= 0 ? loss : (position.enemyBaseHealth <= 0 ? victory : gameControls);	
 	
 	const cats = position.cats.map((cat)=><Cat cat={cat} key={cat.id}/>);
-
 	const enemies = position.enemies.map((enemy)=><Enemy enemy={enemy} key={enemy.id}/>);
 
 	const battle = inBattle?		
@@ -283,12 +291,9 @@ function App() {
 				<EnemyBase health={position.enemyBaseHealth} initialHealth={initialBaseHealth}>
 					{enemies}
 				</EnemyBase>
-			</div>
-			<div>
-				<div>
-					{catButtons}
-					{enemyButtons}
 				</div>
+			<div>
+				{dashboard}
 			</div>
 		</div> 
 		: null;
@@ -304,8 +309,7 @@ function App() {
       	<header className="App-header">
 		  	Battle Cats Labs
 	  	</header>
-		{attackButton}
-		{back}
+		{attackButton}{back}
 		{battle}
 	</div>
   );
