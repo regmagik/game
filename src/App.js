@@ -231,11 +231,20 @@ function App() {
 	function attack(x)
 	{
 		let newCatBaseHealth = x.catBaseHealth-damageBase(x.enemies);
-		if(newCatBaseHealth < 0) newCatBaseHealth = 0;
-
+		if(newCatBaseHealth < 0) 
+		{
+			stopTimer()
+			newCatBaseHealth = 0;
+		}
+		let newEnemyBaseHealth = x.enemyBaseHealth-damageBase(x.cats);
+		if(newEnemyBaseHealth < 0) 
+		{
+			stopTimer()
+			newEnemyBaseHealth = 0;
+		}
 		return {...x, ...calculateHealth(x), 
 			catBaseHealth:newCatBaseHealth, 
-			enemyBaseHealth:x.enemyBaseHealth-damageBase(x.cats)}; 
+			enemyBaseHealth:newEnemyBaseHealth}; 
 	} 
 	function moveCat()
 	{
@@ -291,7 +300,7 @@ function App() {
 				<EnemyBase health={position.enemyBaseHealth} initialHealth={initialBaseHealth}>
 					{enemies}
 				</EnemyBase>
-				</div>
+			</div>
 			<div>
 				{dashboard}
 			</div>
