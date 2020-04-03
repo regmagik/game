@@ -43,7 +43,8 @@ function Enemy(props) {
 		width:props.enemy.width,
 		height:props.enemy.height,
 		left: props.enemy.x, bottom: baseBottom,
-		backgroundImage:`url('enemy${props.enemy.type}${props.enemy.x%2?'2':''}.png')`,
+		backgroundImage:`url('enemy${props.enemy.type}${props.enemy.x%2 &&
+			!props.enemy.isAttacking ? '2':''}${props.enemy.isAttacking?'Attack':''}.png')`,
 		backgroundSize: "contain",
 		backgroundRepeat: "no-repeat"
 	}
@@ -87,8 +88,8 @@ function App() {
 	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:6, attackRange:2, attackPower:1};
 	const anEnemy ={...unit, type:"Doge"}
 	const enemyTypes = [anEnemy, 
-		{...anEnemy, type:"Snache", width:40, height:15, speed:5, attackPower:2}, 
-		{...anEnemy, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
+		{...anEnemy, type:"Snache", width:40, height:15, speed:5, attackPower:1}, 
+		{...anEnemy, type:"Croco", width:35, height:15, speed:3, attackPower:1}];
 	const aCat = {...unit, type:"A", attackPower:3}
 	const catTypes = [aCat, {...aCat, type:"B", height:30, speed:1, attackPower:1, initialHealth:2*initialHealth}, {...aCat, type:"C", speed:5}];
 	const initialPos = {
@@ -184,7 +185,7 @@ function App() {
 	{
 		return {...x, 
 			enemies:x.enemies.map( (unit)=>
-		(anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? {...unit, isAttacking:true} : {...unit, x:unit.x + unit.speed}))};
+		(anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? {...unit, isAttacking:true} : {...unit,isAttacking:false, x:unit.x + unit.speed}))};
 	}
 
 	function canAttack(unit, target)
