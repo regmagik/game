@@ -5,7 +5,10 @@ const baseWidth = 40;
 const baseHeight = 80;
 const baseBottom = 1;
 const baseX = 2;
-
+const attackTypes = {
+	singleAttack: 'Single',
+	areaAttack: 'Area'
+}
 function CatBase(props) {
 	const style = {
 		width:baseWidth,height:baseHeight, right:baseX, bottom: baseBottom,
@@ -84,11 +87,13 @@ function App() {
 	const initialX = 25;
 	const initialHealth = 50;
 	const initialBaseHealth = 500;
-	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:6, attackRange:2, attackPower:1};
-	const anEnemy ={...unit, type:"Doge"}
-	const enemyTypes = [anEnemy, 
-		{...anEnemy, type:"Snache", width:40, height:15, speed:5, attackPower:2}, 
-		{...anEnemy, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
+	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:6, 
+		attackRange:2, attackPower:1, attackType:attackTypes.areaAttack};
+	const enemyTypes =  [
+		{...unit, type:"Doge", attackType:attackTypes.singleAttack}, 
+		{...unit, type:"Snache", width:40, height:15, speed:5, attackPower:2,}, 
+		{...unit, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
+		
 	const aCat = {...unit, type:"A", attackPower:3}
 	const catTypes = [aCat, {...aCat, type:"B", height:30, speed:1, attackPower:1, initialHealth:2*initialHealth}, {...aCat, type:"C", speed:5}];
 	const initialPos = {
@@ -186,10 +191,14 @@ function App() {
 			enemies:x.enemies.map( (unit)=>
 		(anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? {...unit, isAttacking:true} : {...unit, x:unit.x + unit.speed}))};
 	}
+	function getSingleTarget(unit, oppositeTeam){ return oppositeTeam[0]
 
+	}
 	function canAttack(unit, target)
 	{
-		return withinRange(unit, target);
+		return unit.attackType === attackTypes.areaAttack? withinRange(unit, target)
+			:getSingleTarget(unit) === target
+			;
 	}
 
 	function damageCat(cat, {cats, enemies})
