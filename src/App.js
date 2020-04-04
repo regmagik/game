@@ -182,6 +182,7 @@ function App() {
 		moveCat();
 		moveDog();
 		setPosition(attack);
+		if(x%10===1) setPosition(sendEnemy);
 		return x+1;
 	}
 	// determine if the units would be within range after move
@@ -226,7 +227,7 @@ function App() {
 		const damage = attackers.reduce(function (a, b) {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
-		console.log("damage", damage)
+//		console.log("damage", damage)
 		return {...cat, health: cat.health - damage }
 	}
 
@@ -246,7 +247,7 @@ function App() {
 		const damage = attackers.reduce(function (a, b) {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
-		console.log("damage", damage)
+		//console.log("damage", damage)
 		return {...enemy, health: enemy.health - damage }
 	}
 	function damageBase(units){
@@ -255,6 +256,10 @@ function App() {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
 		return damage;
+	}
+	function sendEnemy(x)
+	{
+		return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[0])]}; 
 	}
 	function attack(x)
 	{
@@ -294,13 +299,19 @@ function App() {
 	{
 		return position.enemies.length ? Math.max(...position.enemies.map(e=>e.id))+1 : 10000;
 	}
+	function getCat(type){
+		return {...type, x:initialX, health:type.initialHealth, id:nextCatid() }
+	}
 	function addCat(type){
 		console.log("add cat", type);
-		position.cats.push({...type, x:initialX, health:type.initialHealth, id:nextCatid() });
+		position.cats.push(getCat(type));
+	}
+	function getEnemy(type){
+		return {...type, x:initialX, health:type.initialHealth, id:nextEnemyid() };
 	}
 	function addEnemy(type){
 		console.log("add enemy", type);
-		position.enemies.push({...type, x:initialX, health:type.initialHealth, id:nextEnemyid() });
+		position.enemies.push(getEnemy(type));
 	}
 
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
