@@ -9,7 +9,13 @@
 	position: relative;
 	height: 22vmin;
 	width:300px;
-	margin:auto;
+  margin:auto;
+  background: url(Background.png);
+  background-repeat: no-repeat;
+  background-size: 300px;
+  background-position-y: -5px ;
+  image-orientation: center;
+  opacity: 1;
 }
 .cat{
 	background-size: contain;
