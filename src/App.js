@@ -96,7 +96,7 @@ function App() {
 		{...unit, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
 
 	const aCat = {...unit, type:"A", attackPower:3}
-	const catTypes = [aCat, {...aCat, type:"B", height:30, speed:1, attackPower:1, initialHealth:2*initialHealth}, {...aCat, type:"C", speed:5}];
+	const catTypes = [aCat, {...aCat, type:"B", height:40, speed:1, attackPower:1, initialHealth:2*initialHealth}, {...aCat, type:"C", speed:5}];
 	const initialPos = {
 		cats: [],
 		enemies: [],
@@ -192,19 +192,18 @@ function App() {
 			enemies:x.enemies.map( (unit)=>
 		(anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? {...unit, isAttacking:true} : {...unit,isAttacking:false, x:unit.x + unit.speed}))};
 	}
-	function getSingleTarget(unit, oppositeTeam){ return oppositeTeam[0]
-
+	function getSingleTarget(unit, targets){ 
+		return targets.find(target => withinRange(unit, target));
 	}
-	function canAttack(unit, target)
+	function canAttack(unit, target, oppositeTeam)
 	{
-		return unit.attackType === attackTypes.areaAttack? withinRange(unit, target)
-			:getSingleTarget(unit) === target
-			;
+		return (unit.attackType === attackTypes.areaAttack) ? withinRange(unit, target)
+			: (getSingleTarget(unit, oppositeTeam) === target);
 	}
 
 	function damageCat(cat, {cats, enemies})
 	{
-		const attackers = enemies.filter((unit)=>canAttack(unit, cat));
+		const attackers = enemies.filter((unit)=>canAttack(unit, cat, cats));
 		const damage = attackers.reduce(function (a, b) {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
@@ -224,7 +223,7 @@ function App() {
 	}
 	function damageEnemy(enemy, {cats, enemies})
 	{
-		const attackers = cats.filter((unit)=>canAttack(unit, enemy));
+		const attackers = cats.filter((unit)=>canAttack(unit, enemy, enemies));
 		const damage = attackers.reduce(function (a, b) {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
