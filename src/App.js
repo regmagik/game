@@ -24,11 +24,30 @@ function EnemyBase(props) {
 	return <div className="EnemyBase" style={style}>{props.children}<HealthBar health={props.health} maxHealth={props.initialHealth}/></div>
 }
 function HealthBar({health, maxHealth}) {
+	const width = 30;
+	const height = 5;
 	const styleHealthBar = {
-		position:"absolute", top: -25
-	}
-return <div style={styleHealthBar}>{health} / {maxHealth}</div>
+		position:"absolute", top: -25,
+		borderColor: 'blue',
+		borderWidth: 1,
+		borderStyle:'solid',
+		width: width,
+		height: height
+		}
+		const percentHealth = (100 * health) / maxHealth;
+		const color = percentHealth > 25 ? 'green' : 'red';
+		const styleHealthIndicator = {
+			width: (width * health) / maxHealth,
+			height: height,
+			backgroundColor: color
+			}
+	  
+return <div style={styleHealthBar}>
+			<div style={styleHealthIndicator}></div>
+	</div>
 }
+
+	  
 function Cat(props) {
 	const style = {
 		width:props.cat.width,
