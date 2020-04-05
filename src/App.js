@@ -5,7 +5,10 @@ const baseWidth = 40;
 const baseHeight = 80;
 const baseBottom = 1;
 const baseX = 2;
-
+const attackTypes = {
+	singleAttack: 'Single',
+	areaAttack: 'Area'
+}
 function CatBase(props) {
 	const style = {
 		width:baseWidth,height:baseHeight, right:baseX, bottom: baseBottom,
@@ -104,13 +107,15 @@ function App() {
 	const initialX = 25;
 	const initialHealth = 50;
 	const initialBaseHealth = 500;
-	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:6, attackRange:2, attackPower:1};
-	const anEnemy ={...unit, type:"Doge"}
-	const enemyTypes = [anEnemy, 
-		{...anEnemy, type:"Snache", width:40, height:15, speed:5, attackPower:1}, 
-		{...anEnemy, type:"Croco", width:35, height:15, speed:3, attackPower:1}];
+	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:6, 
+		attackRange:2, attackPower:1, attackType:attackTypes.areaAttack};
+	const enemyTypes =  [
+		{...unit, type:"Doge", attackType:attackTypes.singleAttack}, 
+		{...unit, type:"Snache", width:40, height:15, speed:5, attackPower:2,}, 
+		{...unit, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
+
 	const aCat = {...unit, type:"A", attackPower:3}
-	const catTypes = [aCat, {...aCat, type:"B", height:30, speed:1, attackPower:1, initialHealth:2*initialHealth}, {...aCat, type:"C", speed:5}];
+	const catTypes = [aCat, {...aCat, type:"B", height:40, speed:1, attackPower:1, initialHealth:2*initialHealth}, {...aCat, type:"C", speed:5}];
 	const initialPos = {
 		cats: [],
 		enemies: [],
@@ -177,6 +182,7 @@ function App() {
 		moveCat();
 		moveDog();
 		setPosition(attack);
+		if(x%10===1) setPosition(sendEnemy);
 		return x+1;
 	}
 	// determine if the units would be within range after move
@@ -206,19 +212,22 @@ function App() {
 			enemies:x.enemies.map( (unit)=>
 		(anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? {...unit, isAttacking:true} : {...unit,isAttacking:false, x:unit.x + unit.speed}))};
 	}
-
-	function canAttack(unit, target)
+	function getSingleTarget(unit, targets){ 
+		return targets.find(target => withinRange(unit, target));
+	}
+	function canAttack(unit, target, oppositeTeam)
 	{
-		return withinRange(unit, target);
+		return (unit.attackType === attackTypes.areaAttack) ? withinRange(unit, target)
+			: (getSingleTarget(unit, oppositeTeam) === target);
 	}
 
 	function damageCat(cat, {cats, enemies})
 	{
-		const attackers = enemies.filter((unit)=>canAttack(unit, cat));
+		const attackers = enemies.filter((unit)=>canAttack(unit, cat, cats));
 		const damage = attackers.reduce(function (a, b) {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
-		console.log("damage", damage)
+//		console.log("damage", damage)
 		return {...cat, health: cat.health - damage }
 	}
 
@@ -234,11 +243,11 @@ function App() {
 	}
 	function damageEnemy(enemy, {cats, enemies})
 	{
-		const attackers = cats.filter((unit)=>canAttack(unit, enemy));
+		const attackers = cats.filter((unit)=>canAttack(unit, enemy, enemies));
 		const damage = attackers.reduce(function (a, b) {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
-		console.log("damage", damage)
+		//console.log("damage", damage)
 		return {...enemy, health: enemy.health - damage }
 	}
 	function damageBase(units){
@@ -248,14 +257,27 @@ function App() {
 		}, 0)
 		return damage;
 	}
+	function sendEnemy(x)
+	{
+		return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[0])]}; 
+	}
 	function attack(x)
 	{
 		let newCatBaseHealth = x.catBaseHealth-damageBase(x.enemies);
-		if(newCatBaseHealth < 0) newCatBaseHealth = 0;
-
+		if(newCatBaseHealth < 0) 
+		{
+			stopTimer()
+			newCatBaseHealth = 0;
+		}
+		let newEnemyBaseHealth = x.enemyBaseHealth-damageBase(x.cats);
+		if(newEnemyBaseHealth < 0) 
+		{
+			stopTimer()
+			newEnemyBaseHealth = 0;
+		}
 		return {...x, ...calculateHealth(x), 
 			catBaseHealth:newCatBaseHealth, 
-			enemyBaseHealth:x.enemyBaseHealth-damageBase(x.cats)}; 
+			enemyBaseHealth:newEnemyBaseHealth}; 
 	} 
 	function moveCat()
 	{
@@ -277,13 +299,19 @@ function App() {
 	{
 		return position.enemies.length ? Math.max(...position.enemies.map(e=>e.id))+1 : 10000;
 	}
+	function getCat(type){
+		return {...type, x:initialX, health:type.initialHealth, id:nextCatid() }
+	}
 	function addCat(type){
 		console.log("add cat", type);
-		position.cats.push({...type, x:initialX, health:type.initialHealth, id:nextCatid() });
+		position.cats.push(getCat(type));
+	}
+	function getEnemy(type){
+		return {...type, x:initialX, health:type.initialHealth, id:nextEnemyid() };
 	}
 	function addEnemy(type){
 		console.log("add enemy", type);
-		position.enemies.push({...type, x:initialX, health:type.initialHealth, id:nextEnemyid() });
+		position.enemies.push(getEnemy(type));
 	}
 
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
@@ -311,7 +339,7 @@ function App() {
 				<EnemyBase health={position.enemyBaseHealth} initialHealth={initialBaseHealth}>
 					{enemies}
 				</EnemyBase>
-				</div>
+			</div>
 			<div>
 				{dashboard}
 			</div>
