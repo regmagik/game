@@ -166,26 +166,20 @@ function App() {
 		document.timer = undefined;
 	}
 
-	// React.useEffect( () => {
-	// 	console.log("useEffect")
-	// 	const i_id = setInterval(() => {
-	// 		setTime(x=>x+1)
-	// 		moveAll();
-	// 	},1000);
-	// 	return () => {
-	// 	  clearInterval(i_id);
-	// 	}
-	//   },[]);
+	// React.useEffect( () => {	console.log("useEffect")
+	// 	const i_id = setInterval(() => {setPosition(moveAll);},1000);
+	// 	return () => { clearInterval(i_id);	}
+	// },[]);
 
 	function moveAll(x)
 	{
 		moveCat();
 		moveDog();
 		setPosition(attack);
-		if(x%10===1) setPosition(sendEnemy);
+		if(x%30===1) setPosition(sendEnemy);
 		return x+1;
 	}
-	// determine if the units would be within range after move
+	// determine if the target would be within the unit's attack range after both move
 	function withinRange(unit, target)
 	{
 		return screenWidth - baseX - (unit.x + target.x + unit.width + target.width + unit.speed + target.speed) < unit.attackRange;
@@ -195,16 +189,16 @@ function App() {
 	{
 		return screenWidth - baseX - baseWidth  - (unit.x + unit.width + unit.speed ) < unit.attackRange;
 	}
-	// determine if any unit in the array would be within cat range after move
-	function anyUnitWithinRange(unit, enemyUnits)
+	// determine if any target would be within unit's attack range after move
+	function anyUnitWithinRange(unit, targets)
 	{
-		return enemyUnits.some((enemyUnit)=>withinRange(unit, enemyUnit));
+		return targets.some((target)=>withinRange(unit, target));
 	}
 	function getNextCatPos(x)
 	{
 		return {...x, 
 			cats:x.cats.map((cat)=>(anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? {...cat, isAttacking:true} : {...cat, isAttacking:false, x:cat.x + cat.speed}))
-		} ; 
+		};
 	}
 	function getNextDogPos(x)
 	{
@@ -259,7 +253,7 @@ function App() {
 	}
 	function sendEnemy(x)
 	{
-		return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[0])]}; 
+		return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[0], nextUnitId(x.enemies))]}; 
 	}
 	function attack(x)
 	{
@@ -295,32 +289,38 @@ function App() {
 	{
 		return position.cats.length ? Math.max(...position.cats.map(c=>c.id))+1 : 1;
 	}
-	function nextEnemyid()
+	function nextUnitId(units)
 	{
-		return position.enemies.length ? Math.max(...position.enemies.map(e=>e.id))+1 : 10000;
+		const nextId = (units.length > 0) ? (Math.max(...units.map(e=>e.id))+1) : 2;
+		console.log("next id", nextId)
+		return nextId;
 	}
 	function getCat(type){
 		return {...type, x:initialX, health:type.initialHealth, id:nextCatid() }
 	}
 	function addCat(type){
-		console.log("add cat", type);
+//		console.log("add cat", type);
 		position.cats.push(getCat(type));
 	}
-	function getEnemy(type){
-		return {...type, x:initialX, health:type.initialHealth, id:nextEnemyid() };
+	function getEnemy(type, id){
+		return {...type, x:initialX, health:type.initialHealth, id:id };
 	}
+
 	function addEnemy(type){
-		console.log("add enemy", type);
-		position.enemies.push(getEnemy(type));
+//		console.log("add enemy", type);
+		position.enemies.push(getEnemy(type, nextUnitId(position.enemies)));
 	}
 
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
 	const catButtons = catTypes.map((cat, i)=><CatButton type={cat} addCat={addCat} key={i}/>);
-	const gameControls = <div>
-						{catButtons}
-						{enemyButtons}
-					</div>
-
+	const gameControls = <>
+		<div>
+			{catButtons}
+		</div>
+		<div>
+			{enemyButtons}
+		</div>
+	</>
 	const victory = <p>Victory!</p>;
 	const loss = <p>You lose!</p>;
 
