@@ -107,7 +107,7 @@ function App() {
 	const initialX = 25;
 	const initialHealth = 50;
 	const initialBaseHealth = 500;
-	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:6, 
+	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:5, 
 		attackRange:2, attackPower:1, attackType:attackTypes.areaAttack};
 	const enemyTypes =  [
 		{...unit, type:"Doge", attackType:attackTypes.singleAttack}, 
@@ -115,7 +115,9 @@ function App() {
 		{...unit, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
 
 	const aCat = {...unit, type:"A", attackPower:3}
-	const catTypes = [aCat, {...aCat, type:"B", height:40, speed:1, attackPower:1, initialHealth:2*initialHealth}, {...aCat, type:"C", speed:5}];
+	const catTypes = [aCat, 
+		{...aCat, type:"B", height:40, speed:1, attackPower:1, initialHealth:2*initialHealth, knockBacks:1}, 
+		{...aCat, type:"C", speed:5}];
 	const initialPos = {
 		cats: [],
 		enemies: [],
@@ -222,9 +224,32 @@ function App() {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
 //		console.log("damage", damage)
-		return {...cat, health: cat.health - damage }
+		const newCat = {...cat, health: cat.health - damage, 
+			x:isKnockback(cat, damage) ? (cat.x - 30) : cat.x}
+		
+		return newCat;
 	}
+	function isKnockback(unit, damage)
+	{
+		if(damage <= 0 || unit.knockBacks < 2)	return false;
 
+		const startHealth = unit.health 
+		const endHealth = unit.health - damage
+		const threshold = unit.initialHealth / unit.knockBacks;
+
+		let knockback = 0;
+		while(knockback < unit.health)
+		{
+			console.log(knockback)
+			knockback += threshold
+			if((startHealth > knockback) && (endHealth <= knockback))
+			{
+				console.log("knockback for", unit.type);
+				return true;
+			}
+		}
+		return false;
+	}
 	function calculateHealth({cats, enemies})
 	{
 		// for each cat find all enemies within range and attack them (the first or all within the range)
