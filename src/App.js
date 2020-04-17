@@ -238,7 +238,7 @@ function App() {
 		const endHealth = unit.health - damage
 		const threshold = unit.initialHealth / unit.knockBacks;
 
-		let knockback = 0;
+		let knockback = threshold;
 		while(knockback < unit.health)
 		{
 			console.log(knockback)
@@ -268,7 +268,8 @@ function App() {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
 		//console.log("damage", damage)
-		return {...enemy, health: enemy.health - damage }
+		return {...enemy, health: enemy.health - damage,
+			x:isKnockback(enemy, damage) ? (enemy.x - 30) : enemy.x}
 	}
 	function damageBase(units){
 		const attackers = units.filter((unit)=>canAttackBase(unit));
