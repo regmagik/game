@@ -197,14 +197,15 @@ function App() {
 	function getNextCatPos(x)
 	{
 		return {...x, 
-			cats:x.cats.map((cat)=>(anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? {...cat, isAttacking:true} : {...cat, isAttacking:false, x:cat.x + cat.speed}))
+			cats:x.cats.map((cat) => (anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? 
+				{...cat, isAttacking:true} : {...cat, isAttacking:false, x:cat.x + cat.speed}))
 		};
 	}
 	function getNextDogPos(x)
 	{
 		return {...x, 
-			enemies:x.enemies.map( (unit)=>
-		(anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? {...unit, isAttacking:true} : {...unit,isAttacking:false, x:unit.x + unit.speed}))};
+			enemies:x.enemies.map( (unit) => (anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? 
+				{...unit, isAttacking:true} : {...unit,isAttacking:false, x:unit.x + unit.speed}))};
 	}
 	function getSingleTarget(unit, targets){ 
 		return targets.find(target => withinRange(unit, target));
