@@ -53,9 +53,9 @@ function Cat(props) {
 		width:props.cat.width,
 		height:props.cat.height,
 		right: props.cat.x, bottom: baseBottom,
-		backgroundImage:`url('cat${props.cat.type}${props.cat.x%2 && 
-			!props.cat.isAttacking ? '2':''}${props.cat.isAttacking?'Attack':''}.png')`,
-		backgroundSize: "contain",
+		backgroundImage:`url('cat${props.cat.type}${props.cat.isAttacking?'Attack':''}.png')`,
+		backgroundSize: "75px 25px",
+		backgroundPositionX: (-25)*(props.cat.x%3),
 		backgroundRepeat: "no-repeat"
 	}
 	return <div className="cat" style={style}> <HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/> </div>
@@ -107,7 +107,7 @@ function App() {
 	const initialX = 25;
 	const initialHealth = 50;
 	const initialBaseHealth = 500;
-	const unit = {width:25, height:25, speed:3, initialHealth:initialHealth, knockBacks:5, 
+	const unit = {width:25, height:25, speed:1, initialHealth:initialHealth, knockBacks:5, 
 		attackRange:2, attackPower:1, attackType:attackTypes.areaAttack};
 	const enemyTypes =  [
 		{...unit, type:"Doge", attackType:attackTypes.singleAttack}, 
