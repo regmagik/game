@@ -4,6 +4,11 @@
 	width:100%;
 }
 
+.dashboard{
+	border: 1px dotted grey;
+	width:300px;
+}
+
 .battle{
 	border: 1px dotted grey;
 	position: relative;
@@ -12,13 +17,11 @@
   margin:auto;
   background: url(Background.png);
   background-repeat: no-repeat;
-  background-size: 300px;
-  background-position-y: -5px ;
+  background-size: cover;
   image-orientation: center;
-  opacity: 1;
 }
+
 .cat{
-	background-size: contain;
 	background-repeat: no-repeat;
 	position: absolute;
 -webkit-transition: right 1s; 

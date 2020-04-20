@@ -47,7 +47,6 @@ return <div style={styleHealthBar}>
 	</div>
 }
 
-	  
 function Cat(props) {
 	const style = {
 		width:props.cat.width,
@@ -55,7 +54,7 @@ function Cat(props) {
 		right: props.cat.x, bottom: baseBottom,
 		backgroundImage:`url('cat${props.cat.type}${props.cat.isAttacking?'Attack':''}.png')`,
 		backgroundSize: "75px 25px",
-		backgroundPositionX: (-25)*(props.cat.x%3),
+		backgroundPositionX: (-25)*(props.time%3),
 		backgroundRepeat: "no-repeat"
 	}
 	return <div className="cat" style={style}> <HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/> </div>
@@ -106,11 +105,11 @@ function App() {
 	const screenWidth = 300;
 	const initialX = 25;
 	const initialHealth = 50;
-	const initialBaseHealth = 500;
-	const unit = {width:25, height:25, speed:1, initialHealth:initialHealth, knockBacks:5, 
-		attackRange:2, attackPower:1, attackType:attackTypes.areaAttack};
+	const initialBaseHealth = 2500;
+	const unit = {width:25, height:25, speed:1, initialHealth:initialHealth, knockBacks:4, 
+		attackRange:2, attackPower:1, attackType:attackTypes.singleAttack};
 	const enemyTypes =  [
-		{...unit, type:"Doge", attackType:attackTypes.singleAttack}, 
+		{...unit, type:"Doge"}, 
 		{...unit, type:"Snache", width:40, height:15, speed:5, attackPower:2,}, 
 		{...unit, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
 
@@ -159,7 +158,7 @@ function App() {
 	function startTimer()
 	{
 		if(document.timer === undefined)
-			document.timer = setInterval(()=>setTime(moveAll), 200);
+			document.timer = setInterval(()=>setTime(moveAll), 300);
 	}
 	function stopTimer()
 	{
@@ -178,7 +177,8 @@ function App() {
 		moveCat();
 		moveDog();
 		setPosition(attack);
-		if(x%30===1) setPosition(sendEnemy);
+		// doge frequency
+		if(x%50===1) setPosition(sendEnemy);
 		return x+1;
 	}
 	// determine if the target would be within the unit's attack range after both move
@@ -341,7 +341,7 @@ function App() {
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
 	const catButtons = catTypes.map((cat, i)=><CatButton type={cat} addCat={addCat} key={i}/>);
 	const gameControls = <>
-		<div>
+		<div className="dashboard">
 			{catButtons}
 		</div>
 		<div>
@@ -351,9 +351,10 @@ function App() {
 	const victory = <p>Victory!</p>;
 	const loss = <p>You lose!</p>;
 
-	const dashboard = position.catBaseHealth <= 0 ? loss : (position.enemyBaseHealth <= 0 ? victory : gameControls);	
+	const dashboard = position.catBaseHealth <= 0 ? loss : 
+		(position.enemyBaseHealth <= 0 ? victory : gameControls);	
 	
-	const cats = position.cats.map((cat)=><Cat cat={cat} key={cat.id}/>);
+	const cats = position.cats.map((cat)=><Cat cat={cat} key={cat.id} time={time}/>);
 	const enemies = position.enemies.map((enemy)=><Enemy enemy={enemy} key={enemy.id}/>);
 
 	const battle = inBattle?		
@@ -367,9 +368,7 @@ function App() {
 					{enemies}
 				</EnemyBase>
 			</div>
-			<div>
-				{dashboard}
-			</div>
+			{dashboard}
 		</div> 
 		: null;
 		const back = inBattle?
