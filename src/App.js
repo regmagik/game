@@ -49,15 +49,31 @@ return <div style={styleHealthBar}>
 
 function Cat(props) {
 	const style = {
-		width:props.cat.width,
+		width:props.cat.isAttacking ? props.cat.attackWidth:props.cat.width,
 		height:props.cat.height,
 		right: props.cat.x, bottom: baseBottom,
 		backgroundImage:`url('cat${props.cat.type}${props.cat.isAttacking?'Attack':''}.png')`,
-		backgroundSize: "75px 25px",
-		backgroundPositionX: (-25)*(props.time%3),
+		backgroundSize: getBackgroundSize(props.cat),
+		backgroundPositionX: -(props.cat.isAttacking ? props.cat.attackWidth : props.cat.width)*(props.time%3),
 		backgroundRepeat: "no-repeat"
 	}
 	return <div className="cat" style={style}> <HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/> </div>
+}
+function getBackgroundSize(unit){
+	return `${unit.isAttacking ? unit.attackImageCount*unit.attackWidth:unit.walkingImageCount*unit.width}px ${unit.height}px`
+}
+
+function CatV(props) {
+	const style = {
+		width:props.cat.width,
+		height:props.cat.height,
+		position:"absolute", right: props.cat.x, bottom: baseBottom,
+	}
+	return <div style={style}>
+		<video width={props.cat.width} height={props.cat.height} autoplay>
+			<source src={"cat"+props.cat.type+".mp4"} type="video/mp4"/>
+		</video> 
+		<HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/> </div>
 }
 function Enemy(props) {
 	const style = {
@@ -79,10 +95,11 @@ function CatButton(props) {
 	}
 	const buttonStyle = {
 		width:30,
-		height:20,
+		height:60,
 		backgroundImage:`url('cat${props.type.type}.png')`,
-		backgroundSize: "contain",
+		backgroundSize: `90px ${props.type.height}px`,
 		backgroundRepeat: "no-repeat",
+		backgroundPosition: "center",
 		float:"right"
 	}
 	return <div style={buttonStyle} onClick={onAdd}/>
@@ -106,16 +123,21 @@ function App() {
 	const initialX = 25;
 	const initialHealth = 50;
 	const initialBaseHealth = 2500;
-	const unit = {width:25, height:25, speed:1, initialHealth:initialHealth, knockBacks:4, 
+	const unit = {width:25, height:25,
+		// image animation parameters: 
+		walkingImageCount: 3,
+		attackImageCount: 3, attackWidth: 25,
+		speed:1, initialHealth:initialHealth, knockBacks:4, 
 		attackRange:2, attackPower:1, attackType:attackTypes.singleAttack};
 	const enemyTypes =  [
 		{...unit, type:"Doge"}, 
 		{...unit, type:"Snache", width:40, height:15, speed:5, attackPower:2,}, 
 		{...unit, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
 
-	const aCat = {...unit, type:"A", attackPower:3}
+	const aCat = {...unit, type:"A", speed:3, attackPower:3}
 	const catTypes = [aCat, 
-		{...aCat, type:"B", height:40, speed:1, attackPower:1, initialHealth:2*initialHealth, knockBacks:1}, 
+		{...aCat, type:"B", height:40, attackImageCount: 4, width: 25, attackWidth: 40, 
+			speed:1, attackPower:1, initialHealth:2*initialHealth, knockBacks:1}, 
 		{...aCat, type:"C", speed:5}];
 	const initialPos = {
 		cats: [],
@@ -184,7 +206,7 @@ function App() {
 	// determine if the target would be within the unit's attack range after both move
 	function withinRange(unit, target)
 	{
-		return screenWidth - baseX - (unit.x + target.x + unit.width + target.width + unit.speed + target.speed) < unit.attackRange;
+		return screenWidth - baseX - (unit.x + target.x + Math.max(unit.width, unit.attackWidth) + Math.max(target.width, target.attackWidth) + unit.speed + target.speed) < unit.attackRange;
 	}
 	//check if the unit is close to opposite base
 	function canAttackBase(unit)
@@ -241,11 +263,11 @@ function App() {
 		let knockback = threshold;
 		while(knockback < unit.health)
 		{
-			console.log(knockback)
+//			console.log(knockback)
 			knockback += threshold
 			if((startHealth > knockback) && (endHealth <= knockback))
 			{
-				console.log("knockback for", unit.type);
+//				console.log("knockback for", unit.type);
 				return true;
 			}
 		}
@@ -319,7 +341,7 @@ function App() {
 	function nextUnitId(units)
 	{
 		const nextId = (units.length > 0) ? (Math.max(...units.map(e=>e.id))+1) : 2;
-		console.log("next id", nextId)
+//		console.log("next id", nextId)
 		return nextId;
 	}
 	function getCat(type){
