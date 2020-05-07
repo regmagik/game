@@ -63,6 +63,20 @@ function getBackgroundSize(unit){
 	return `${unit.isAttacking ? unit.attackImageCount*unit.attackWidth:unit.walkingImageCount*unit.width}px ${unit.height}px`
 }
 
+function getBackgroundSize2(unit){
+	return `${unit.attackImageCount*unit.attackWidth+unit.walkingImageCount*unit.width}px ${unit.height}px`
+}
+
+function getBackgroundPositionX(unit, time){
+	const index = time %3;//TODO generalize 3
+	console.log(index);
+	const offset = unit.isAttacking ? 
+		(unit.walkingImageCount*unit.width + unit.attackWidth*index) 
+		: unit.width*index;
+		console.log(offset);
+	return -offset;
+}
+
 function CatV(props) {
 	const style = {
 		width:props.cat.width,
@@ -80,14 +94,13 @@ function Enemy(props) {
 		width:props.enemy.width,
 		height:props.enemy.height,
 		left: props.enemy.x, bottom: baseBottom,
-		backgroundImage:`url('enemy${props.enemy.type}${props.enemy.x%2 &&
-			!props.enemy.isAttacking ? '2':''}${props.enemy.isAttacking?'Attack':''}.png')`,
-		backgroundSize: "contain",
+		backgroundImage:`url('${props.enemy.type}.png')`,
+		backgroundSize: getBackgroundSize2(props.enemy),
+		backgroundPositionX: getBackgroundPositionX(props.enemy, props.time),
 		backgroundRepeat: "no-repeat"
 	}
 	return <div className="enemy" style={style}>  <HealthBar health={props.enemy.health} maxHealth={props.enemy.initialHealth}/> </div>
 }
-
 
 function CatButton(props) {
 	function onAdd(){
@@ -99,7 +112,7 @@ function CatButton(props) {
 		backgroundImage:`url('cat${props.type.type}.png')`,
 		backgroundSize: `90px ${props.type.height}px`,
 		backgroundRepeat: "no-repeat",
-		backgroundPosition: "center",
+		backgroundPosition: "left center",
 		float:"right"
 	}
 	return <div style={buttonStyle} onClick={onAdd}/>
@@ -108,11 +121,13 @@ function EnemyButton(props) {
 	function onAdd(){
 		props.addEnemy(props.type)
 	}
+	const buttonWidth = 30;
 	const buttonStyle = {
-		width:30,
-		height:20,
-		backgroundImage:`url('enemy${props.type.type}.png')`,
-		backgroundSize: "contain",
+		width:buttonWidth,
+		height:2*buttonWidth,
+		backgroundImage:`url('${props.type.type}.png')`,
+		backgroundSize: `${buttonWidth*(props.type.walkingImageCount*props.type.width + props.type.attackImageCount * props.type.attackWidth)/props.type.width}px ${buttonWidth*props.type.height/props.type.width}px`,
+		backgroundPosition: "left center",
 		backgroundRepeat: "no-repeat",
 		float:"left"
 	}
@@ -130,9 +145,9 @@ function App() {
 		speed:1, initialHealth:initialHealth, knockBacks:4, 
 		attackRange:2, attackPower:1, attackType:attackTypes.singleAttack};
 	const enemyTypes =  [
-		{...unit, type:"Doge"}, 
-		{...unit, type:"Snache", width:40, height:15, speed:5, attackPower:2,}, 
-		{...unit, type:"Croco", width:35, height:15, speed:3, attackPower:4}];
+		{...unit, type:"doge", width:27, height:30, attackWidth:27, attackImageCount: 4}, 
+		{...unit, type:"snache", width:40, height:15, speed:5, attackPower:2,}, 
+		{...unit, type:"croco", width:35, height:15, speed:3, attackPower:4}];
 
 	const aCat = {...unit, type:"A", speed:3, attackPower:3}
 	const catTypes = [aCat, 
@@ -377,7 +392,7 @@ function App() {
 		(position.enemyBaseHealth <= 0 ? victory : gameControls);	
 	
 	const cats = position.cats.map((cat)=><Cat cat={cat} key={cat.id} time={time}/>);
-	const enemies = position.enemies.map((enemy)=><Enemy enemy={enemy} key={enemy.id}/>);
+	const enemies = position.enemies.map((enemy)=><Enemy enemy={enemy} key={enemy.id} time={time}/>);
 
 	const battle = inBattle?		
 		<div className="row">
