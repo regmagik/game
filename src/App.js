@@ -24,10 +24,10 @@ function EnemyBase(props) {
 	return <div className="EnemyBase" style={style}>{props.children}<HealthBar health={props.health} maxHealth={props.initialHealth}/></div>
 }
 function HealthBar({health, maxHealth}) {
-	const width = 30;
-	const height = 5;
+	const width = 20;
+	const height = 1;
 	const styleHealthBar = {
-		position:"absolute", top: -25,
+		position:"absolute", top: -15,
 		borderColor: 'blue',
 		borderWidth: 1,
 		borderStyle:'solid',
@@ -35,7 +35,7 @@ function HealthBar({health, maxHealth}) {
 		height: height
 		}
 		const percentHealth = (100 * health) / maxHealth;
-		const color = percentHealth > 25 ? 'green' : 'red';
+		const color = percentHealth > 25 ? 'lime' : 'red';
 		const styleHealthIndicator = {
 			width: (width * health) / maxHealth,
 			height: height,
@@ -48,33 +48,32 @@ return <div style={styleHealthBar}>
 }
 
 function Cat(props) {
+	const f = props.cat.imageToLogicalPxFactor;
 	const style = {
-		width:props.cat.isAttacking ? props.cat.attackWidth:props.cat.width,
-		height:props.cat.height,
+		width:f*(props.cat.isAttacking ? props.cat.attackWidth:props.cat.width),
+		height:f*props.cat.height,
 		right: props.cat.x, bottom: baseBottom,
-		backgroundImage:`url('cat${props.cat.type}${props.cat.isAttacking?'Attack':''}.png')`,
+		backgroundImage:`url('${props.cat.type}.png')`,
 		backgroundSize: getBackgroundSize(props.cat),
-		backgroundPositionX: -(props.cat.isAttacking ? props.cat.attackWidth : props.cat.width)*(props.time%3),
+		backgroundPositionX: getBackgroundPositionX(props.cat, props.time),
 		backgroundRepeat: "no-repeat"
 	}
 	return <div className="cat" style={style}> <HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/> </div>
 }
 function getBackgroundSize(unit){
-	return `${unit.isAttacking ? unit.attackImageCount*unit.attackWidth:unit.walkingImageCount*unit.width}px ${unit.height}px`
+	const f = unit.imageToLogicalPxFactor;
+	return `${f*getTotalWidth(unit)}px ${f*unit.height}px`
 }
-
-function getBackgroundSize2(unit){
-	return `${unit.attackImageCount*unit.attackWidth+unit.walkingImageCount*unit.width}px ${unit.height}px`
+function getTotalWidth(unit){
+	return unit.walkingImageCount*unit.width + unit.attackImageCount*unit.attackWidth + unit.hurtWidth;
 }
 
 function getBackgroundPositionX(unit, time){
 	const index = time %3;//TODO generalize 3
-	console.log(index);
 	const offset = unit.isAttacking ? 
 		(unit.walkingImageCount*unit.width + unit.attackWidth*index) 
 		: unit.width*index;
-		console.log(offset);
-	return -offset;
+	return -offset*unit.imageToLogicalPxFactor;
 }
 
 function CatV(props) {
@@ -95,38 +94,49 @@ function Enemy(props) {
 		height:props.enemy.height,
 		left: props.enemy.x, bottom: baseBottom,
 		backgroundImage:`url('${props.enemy.type}.png')`,
-		backgroundSize: getBackgroundSize2(props.enemy),
+		backgroundSize: getBackgroundSize(props.enemy),
 		backgroundPositionX: getBackgroundPositionX(props.enemy, props.time),
 		backgroundRepeat: "no-repeat"
 	}
-	return <div className="enemy" style={style}>  <HealthBar health={props.enemy.health} maxHealth={props.enemy.initialHealth}/> </div>
+	return <div className="enemy" style={style}> <HealthBar health={props.enemy.health} maxHealth={props.enemy.initialHealth}/> </div>
 }
 
+const buttonWidth = 50;
+const buttonH = buttonWidth;
 function CatButton(props) {
 	function onAdd(){
 		props.addCat(props.type)
 	}
 	const buttonStyle = {
-		width:30,
-		height:60,
-		backgroundImage:`url('cat${props.type.type}.png')`,
-		backgroundSize: `90px ${props.type.height}px`,
-		backgroundRepeat: "no-repeat",
-		backgroundPosition: "left center",
-		float:"right"
+		width:buttonWidth,
+		height:buttonH,
+		float:"right",
+		border: 1, borderColor:"white", borderWidth: 1, borderStyle: 'solid',
+		marginLeft: 1,
+		paddingBottom: 1,
 	}
-	return <div style={buttonStyle} onClick={onAdd}/>
+	
+	var scale = props.type.imageToLogicalPxFactor*buttonWidth/props.type.width;
+	const imgStyle = {
+		width:props.type.imageToLogicalPxFactor*buttonWidth,
+		height:buttonH,
+		backgroundImage:`url('${props.type.type}.png')`,
+		backgroundSize: `${scale*getTotalWidth(props.type)}px ${scale*props.type.height}px`,
+		backgroundRepeat: "no-repeat",
+		backgroundPosition: "left bottom",
+		margin:"auto"
+	}
+	return <div style={buttonStyle} onClick={onAdd}><div style={imgStyle}></div></div>
 }
 function EnemyButton(props) {
 	function onAdd(){
 		props.addEnemy(props.type)
 	}
-	const buttonWidth = 30;
 	const buttonStyle = {
 		width:buttonWidth,
-		height:2*buttonWidth,
+		height:buttonH,
 		backgroundImage:`url('${props.type.type}.png')`,
-		backgroundSize: `${buttonWidth*(props.type.walkingImageCount*props.type.width + props.type.attackImageCount * props.type.attackWidth)/props.type.width}px ${buttonWidth*props.type.height/props.type.width}px`,
+		backgroundSize: `${buttonWidth*getTotalWidth(props.type)/props.type.width}px ${buttonWidth*props.type.height/props.type.width}px`,
 		backgroundPosition: "left center",
 		backgroundRepeat: "no-repeat",
 		float:"left"
@@ -139,21 +149,26 @@ function App() {
 	const initialHealth = 50;
 	const initialBaseHealth = 2500;
 	const unit = {width:25, height:25,
-		// image animation parameters: 
-		walkingImageCount: 3,
-		attackImageCount: 3, attackWidth: 25,
+		// sprite layout: walking - attack - hurt 
+		walkingImageCount: 3, attackImageCount: 4, attackWidth: 25, hurtWidth: 0,
+		imageToLogicalPxFactor: 1,
 		speed:1, initialHealth:initialHealth, knockBacks:4, 
 		attackRange:2, attackPower:1, attackType:attackTypes.singleAttack};
 	const enemyTypes =  [
-		{...unit, type:"doge", width:27, height:30, attackWidth:27, attackImageCount: 4}, 
+		{...unit, type:"doge", width:27, height:30, attackWidth:27},//sprite sheet 372 x 60 px 
 		{...unit, type:"snache", width:40, height:15, speed:5, attackPower:2,}, 
 		{...unit, type:"croco", width:35, height:15, speed:3, attackPower:4}];
 
 	const aCat = {...unit, type:"A", speed:3, attackPower:3}
-	const catTypes = [aCat, 
-		{...aCat, type:"B", height:40, attackImageCount: 4, width: 25, attackWidth: 40, 
-			speed:1, attackPower:1, initialHealth:2*initialHealth, knockBacks:1}, 
-		{...aCat, type:"C", speed:5}];
+	const catTypes = [
+		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, imageToLogicalPxFactor: 0.5}, 
+		{...aCat, type:"B", width:53, height:101, attackWidth: 80, imageToLogicalPxFactor: 0.5,  
+			speed:1, attackPower:1, initialHealth:2*initialHealth, knockBacks:1
+		},
+		{...aCat, type:"axe", speed:5, width:53, height:63, attackWidth: 56, imageToLogicalPxFactor: 0.7, hurtWidth: 36},// 106, 115, 75 x 126 
+		{...aCat, type:"sword", speed:6, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
+		{...aCat, type:"legs", speed:2, width:90, height: 306, imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250},
+	];
 	const initialPos = {
 		cats: [],
 		enemies: [],
@@ -221,12 +236,12 @@ function App() {
 	// determine if the target would be within the unit's attack range after both move
 	function withinRange(unit, target)
 	{
-		return screenWidth - baseX - (unit.x + target.x + Math.max(unit.width, unit.attackWidth) + Math.max(target.width, target.attackWidth) + unit.speed + target.speed) < unit.attackRange;
+		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*Math.max(unit.width, unit.attackWidth) + target.imageToLogicalPxFactor*Math.max(target.width, target.attackWidth) + unit.speed + target.speed) < unit.attackRange;
 	}
 	//check if the unit is close to opposite base
 	function canAttackBase(unit)
 	{
-		return screenWidth - baseX - baseWidth  - (unit.x + unit.width + unit.speed ) < unit.attackRange;
+		return screenWidth - baseX - baseWidth  - (unit.x + unit.imageToLogicalPxFactor*unit.width + unit.speed ) < unit.attackRange;
 	}
 	// determine if any target would be within unit's attack range after move
 	function anyUnitWithinRange(unit, targets)
@@ -363,7 +378,11 @@ function App() {
 		return {...type, x:initialX, health:type.initialHealth, id:nextCatid() }
 	}
 	function addCat(type){
-//		console.log("add cat", type);
+		const f = 1;
+		console.log("add cat", type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
+//		const walk = f*type.width*type.walkingImageCount, attack = f*type.attackWidth*type.attackImageCount;
+//		console.log("total walking width", walk, "total attack width", attack, "total walk+attack width", walk+attack);
+		setBattle(x => {startTimer(); return true;})
 		position.cats.push(getCat(type));
 	}
 	function getEnemy(type, id){

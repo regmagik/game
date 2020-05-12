@@ -7,8 +7,9 @@
 .dashboard{
 	border: 1px dotted grey;
 	width:300px;
+	height:55px;
 	margin:auto;
-	background: grey;
+	background: lightgrey;
 }
 
 .battle{
