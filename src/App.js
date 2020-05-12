@@ -159,14 +159,14 @@ function App() {
 		{...unit, type:"snache", width:40, height:15, speed:5, attackPower:2,}, 
 		{...unit, type:"croco", width:35, height:15, speed:3, attackPower:4}];
 
-	const aCat = {...unit, type:"A", speed:3, attackPower:3}
+	const aCat = {...unit, type:"A", speed:2, attackPower:3}
 	const catTypes = [
 		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, imageToLogicalPxFactor: 0.5}, 
 		{...aCat, type:"B", width:53, height:101, attackWidth: 80, imageToLogicalPxFactor: 0.5,  
 			speed:1, attackPower:1, initialHealth:2*initialHealth, knockBacks:1
 		},
-		{...aCat, type:"axe", speed:5, width:53, height:63, attackWidth: 56, imageToLogicalPxFactor: 0.7, hurtWidth: 36},// 106, 115, 75 x 126 
-		{...aCat, type:"sword", speed:6, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
+		{...aCat, type:"axe", speed:3, width:53, height:63, attackWidth: 56, imageToLogicalPxFactor: 0.7, hurtWidth: 36},// 106, 115, 75 x 126 
+		{...aCat, type:"sword", speed:3, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
 		{...aCat, type:"legs", speed:2, width:90, height: 306, imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250},
 	];
 	const initialPos = {
