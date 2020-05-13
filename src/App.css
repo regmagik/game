@@ -6,7 +6,7 @@
 
 .dashboard{
 	border: 1px dotted grey;
-	width:300px;
+	width:320px;
 	height:55px;
 	margin:auto;
 	background: lightgrey;
@@ -15,8 +15,8 @@
 .battle{
 	border: 1px dotted grey;
 	position: relative;
-	height: 22vmin;
-	width:300px;
+	height: 220px;
+	width:320px;
   margin:auto;
   background: url(Background.png);
   background-repeat: no-repeat;

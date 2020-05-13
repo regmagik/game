@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import './App.css';
 
-const baseWidth = 40;
-const baseHeight = 80;
+const baseFactor = 2;
+const baseWidth = baseFactor * 40;
+const baseHeight = baseFactor * 80;
 const baseBottom = 1;
 const baseX = 2;
 const attackTypes = {
@@ -12,7 +13,7 @@ const attackTypes = {
 function CatBase(props) {
 	const style = {
 		width:baseWidth,height:baseHeight, right:baseX, bottom: baseBottom,
-		backgroundImage:"url('rightbase.png')"
+		backgroundImage:"url('catBase.png')"
 	}
 	return <div className="CatBase" style={style}>{props.children}<HealthBar health={props.health} maxHealth={props.initialHealth}/></div>
 }
@@ -69,29 +70,30 @@ function getTotalWidth(unit){
 }
 
 function getBackgroundPositionX(unit, time){
-	const index = time %3;//TODO generalize 3
+	const numberOfImages = unit.isAttacking ? unit.attackImageCount : unit.walkingImageCount;
+	const index = (unit.initialIndex + time) % numberOfImages;
 	const offset = unit.isAttacking ? 
 		(unit.walkingImageCount*unit.width + unit.attackWidth*index) 
 		: unit.width*index;
 	return -offset*unit.imageToLogicalPxFactor;
 }
-
-function CatV(props) {
-	const style = {
-		width:props.cat.width,
-		height:props.cat.height,
-		position:"absolute", right: props.cat.x, bottom: baseBottom,
-	}
-	return <div style={style}>
-		<video width={props.cat.width} height={props.cat.height} autoplay>
-			<source src={"cat"+props.cat.type+".mp4"} type="video/mp4"/>
-		</video> 
-		<HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/> </div>
-}
+// function CatV(props) {
+// 	const style = {
+// 		width:props.cat.width,
+// 		height:props.cat.height,
+// 		position:"absolute", right: props.cat.x, bottom: baseBottom,
+// 	}
+// 	return <div style={style}>
+// 		<video width={props.cat.width} height={props.cat.height} autoplay>
+// 			<source src={"cat"+props.cat.type+".mp4"} type="video/mp4"/>
+// 		</video> 
+// 	</div>
+// }
 function Enemy(props) {
+	const f = props.enemy.imageToLogicalPxFactor;
 	const style = {
-		width:props.enemy.width,
-		height:props.enemy.height,
+		width:f*(props.enemy.isAttacking ? props.enemy.attackWidth:props.enemy.width),
+		height:f*props.enemy.height,
 		left: props.enemy.x, bottom: baseBottom,
 		backgroundImage:`url('${props.enemy.type}.png')`,
 		backgroundSize: getBackgroundSize(props.enemy),
@@ -144,7 +146,7 @@ function EnemyButton(props) {
 	return <div style={buttonStyle} onClick={onAdd}/>
 }
 function App() {
-	const screenWidth = 300;
+	const screenWidth = 320;
 	const initialX = 25;
 	const initialHealth = 50;
 	const initialBaseHealth = 2500;
@@ -156,7 +158,11 @@ function App() {
 		attackRange:2, attackPower:1, attackType:attackTypes.singleAttack};
 	const enemyTypes =  [
 		{...unit, type:"doge", width:27, height:30, attackWidth:27},//sprite sheet 372 x 60 px 
-		{...unit, type:"snache", width:40, height:15, speed:5, attackPower:2,}, 
+		{...unit, type:"snache", 
+			width:75, attackWidth: 80, hurtWidth: 140, walkingImageCount: 4, height:63, speed:4, attackPower:2, 
+			imageToLogicalPxFactor: .5,
+		}, 
+		{...unit, type: "baa", width:100, attackWidth: 140, hurtWidth:100, height:87, attackImageCount:7, imageToLogicalPxFactor: .5, knockBacks:2,},
 		{...unit, type:"croco", width:35, height:15, speed:3, attackPower:4}];
 
 	const aCat = {...unit, type:"A", speed:2, attackPower:3}
@@ -333,7 +339,9 @@ function App() {
 	}
 	function sendEnemy(x)
 	{
-		return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[0], nextUnitId(x.enemies))]}; 
+//		const index = Math.floor(Math.random() * 3)
+//return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[index], nextUnitId(x.enemies))]}; 
+return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[2], nextUnitId(x.enemies))]}; 
 	}
 	function attack(x)
 	{
@@ -376,24 +384,34 @@ function App() {
 		return nextId;
 	}
 	function getCat(type){
-		return {...type, x:initialX, health:type.initialHealth, id:nextCatid() }
+		return {...type, x:initialX, health:type.initialHealth, id:nextCatid(),
+			initialIndex: getRandomImageOffset(type), 
+		}
+	}
+	function startBattleOnce(){
+		setTime(x=>{if(!x){console.log("starting battle..."); startBattle(); } return x+1});
 	}
 	function addCat(type){
 		const f = 1;
 		console.log("add cat", type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
 //		const walk = f*type.width*type.walkingImageCount, attack = f*type.attackWidth*type.attackImageCount;
 //		console.log("total walking width", walk, "total attack width", attack, "total walk+attack width", walk+attack);
-		setTime(x=>{if(!x){console.log("starting..."); startBattle(); } return x+1});
-//		startTimer();
-//		startBattle();
+		startBattleOnce();
 		position.cats.push(getCat(type));
 	}
+	function getRandomImageOffset(type){
+		return Math.floor(Math.random() * type.walkingImageCount);
+	}
 	function getEnemy(type, id){
-		return {...type, x:initialX, health:type.initialHealth, id:id };
+		return {...type, x:initialX, health:type.initialHealth, id:id, 
+			initialIndex: getRandomImageOffset(type), 
+		};
 	}
 
 	function addEnemy(type){
-		console.log("add enemy", type);
+		const f = 1;
+		console.log("add enemy", type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
+		startBattleOnce();
 		position.enemies.push(getEnemy(type, nextUnitId(position.enemies)));
 	}
 
