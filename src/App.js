@@ -167,7 +167,7 @@ function App() {
 		},
 		{...aCat, type:"axe", speed:3, width:53, height:63, attackWidth: 56, imageToLogicalPxFactor: 0.7, hurtWidth: 36},// 106, 115, 75 x 126 
 		{...aCat, type:"sword", speed:3, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
-		{...aCat, type:"legs", speed:2, width:90, height: 306, imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250},
+		{...aCat, type:"legs", speed:3.5, width:90, height: 306, imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250},
 	];
 	const initialPos = {
 		cats: [],
@@ -226,6 +226,7 @@ function App() {
 
 	function moveAll(x)
 	{
+//		console.log(x)
 		moveCat();
 		moveDog();
 		setPosition(attack);
@@ -379,10 +380,12 @@ function App() {
 	}
 	function addCat(type){
 		const f = 1;
-		console.log("add cat", type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
+		console.log("add cat", type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
 //		const walk = f*type.width*type.walkingImageCount, attack = f*type.attackWidth*type.attackImageCount;
 //		console.log("total walking width", walk, "total attack width", attack, "total walk+attack width", walk+attack);
-		setBattle(x => {startTimer(); return true;})
+		setTime(x=>{if(!x){console.log("starting..."); startBattle(); } return x+1});
+//		startTimer();
+//		startBattle();
 		position.cats.push(getCat(type));
 	}
 	function getEnemy(type, id){
@@ -390,7 +393,7 @@ function App() {
 	}
 
 	function addEnemy(type){
-//		console.log("add enemy", type);
+		console.log("add enemy", type);
 		position.enemies.push(getEnemy(type, nextUnitId(position.enemies)));
 	}
 
