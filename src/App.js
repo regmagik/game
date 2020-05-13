@@ -339,9 +339,8 @@ function App() {
 	}
 	function sendEnemy(x)
 	{
-//		const index = Math.floor(Math.random() * 3)
-//return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[index], nextUnitId(x.enemies))]}; 
-return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[2], nextUnitId(x.enemies))]}; 
+		const index = Math.floor(Math.random() * 3)
+		return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[index], nextUnitId(x.enemies))]}; 
 	}
 	function attack(x)
 	{
