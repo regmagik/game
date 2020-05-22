@@ -59,7 +59,9 @@ function Cat(props) {
 		backgroundPositionX: getBackgroundPositionX(props.cat, props.time),
 		backgroundRepeat: "no-repeat"
 	}
-	return <div className="cat" style={style}> <HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/> </div>
+	return <div className="cat" style={style}> 
+		{/* <HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/>  */}
+	</div>
 }
 function getBackgroundSize(unit){
 	const f = unit.imageToLogicalPxFactor;
@@ -71,7 +73,8 @@ function getTotalWidth(unit){
 
 function getBackgroundPositionX(unit, time){
 	const numberOfImages = unit.isAttacking ? unit.attackImageCount : unit.walkingImageCount;
-	const index = (unit.initialIndex + time) % numberOfImages;
+	const index = unit.isAttacking ? (time - unit.lastAttackStart) % numberOfImages
+		: (unit.initialIndex + time) % numberOfImages;
 	const offset = unit.isAttacking ? 
 		(unit.walkingImageCount*unit.width + unit.attackWidth*index) 
 		: unit.width*index;
@@ -148,32 +151,39 @@ function EnemyButton(props) {
 function App() {
 	const screenWidth = 320;
 	const initialX = 25;
-	const initialHealth = 50;
+	const initialHealth = 50; // basic cat initial health (physical fitness 4200, offensive power 335)
 	const initialBaseHealth = 2500;
 	const unit = {width:25, height:25,
 		// sprite layout: walking - attack - hurt 
 		walkingImageCount: 3, attackImageCount: 4, attackWidth: 25, hurtWidth: 0,
 		imageToLogicalPxFactor: 1,
-		speed:1, initialHealth:initialHealth, knockBacks:4, 
+		cost:75, 
+		timeToMake:2, // time to wait before adding another unit of this type, seconds. 
+		speed:1,// moving speed 
+		timeBetweenAttacks:1.23, // time to wait before unit can attack again
+		initialHealth:initialHealth, knockBacks:3, 
 		attackRange:2, attackPower:1, attackType:attackTypes.singleAttack};
 	const enemyTypes =  [
-		{...unit, type:"doge", width:27, height:30, attackWidth:27},//sprite sheet 372 x 60 px 
+		{...unit, type:"doge", width:55, height:60, attackWidth:55, imageToLogicalPxFactor: .5},//sprite sheet 372 x 60 px 
 		{...unit, type:"snache", 
-			width:75, attackWidth: 80, hurtWidth: 140, walkingImageCount: 4, height:63, speed:4, attackPower:2, 
+			width:75, attackWidth: 80, hurtWidth: 140, walkingImageCount: 4, height:63, speed:2, attackPower:2, 
 			imageToLogicalPxFactor: .5,
 		}, 
 		{...unit, type: "baa", width:100, attackWidth: 140, hurtWidth:100, height:87, attackImageCount:7, imageToLogicalPxFactor: .5, knockBacks:2,},
-		{...unit, type:"croco", width:35, height:15, speed:3, attackPower:4}];
+	//	{...unit, type:"croco", width:35, height:15, speed:3, attackPower:4},
+	];
 
 	const aCat = {...unit, type:"A", speed:2, attackPower:3}
 	const catTypes = [
 		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, imageToLogicalPxFactor: 0.5}, 
+//		{...aCat, type:"gold", width:50, height:58, attackWidth:60, hurtWidth:60, attackImageCount: 4, 
+//			imageToLogicalPxFactor: 0.5}, 
 		{...aCat, type:"B", width:53, height:101, attackWidth: 80, imageToLogicalPxFactor: 0.5,  
-			speed:1, attackPower:1, initialHealth:2*initialHealth, knockBacks:1
+			speed:1, attackPower:1, initialHealth:2*initialHealth, knockBacks:1, timeBetweenAttacks:2.23
 		},
 		{...aCat, type:"axe", speed:3, width:53, height:63, attackWidth: 56, imageToLogicalPxFactor: 0.7, hurtWidth: 36},// 106, 115, 75 x 126 
-		{...aCat, type:"sword", speed:3, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
-		{...aCat, type:"legs", speed:3.5, width:90, height: 306, imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250},
+//		{...aCat, type:"sword", speed:3, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
+		{...aCat, type:"legs", speed:3.5, width:90, height: 306, imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, timeBetweenAttacks:4.6},
 	];
 	const initialPos = {
 		cats: [],
@@ -216,7 +226,7 @@ function App() {
 	function startTimer()
 	{
 		if(document.timer === undefined)
-			document.timer = setInterval(()=>setTime(moveAll), 300);
+			document.timer = setInterval(()=>setTime(moveAll), 333);
 	}
 	function stopTimer()
 	{
@@ -233,7 +243,7 @@ function App() {
 	function moveAll(x)
 	{
 //		console.log(x)
-		moveCat();
+		moveCat(x);
 		moveDog();
 		setPosition(attack);
 		// doge frequency
@@ -255,11 +265,17 @@ function App() {
 	{
 		return targets.some((target)=>withinRange(unit, target));
 	}
-	function getNextCatPos(x)
+	function getNextCatPos(x, t)
 	{
+		// if a unit is in the middle of animation - it must finish animation 
 		return {...x, 
-			cats:x.cats.map((cat) => (anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? 
-				{...cat, isAttacking:true} : {...cat, isAttacking:false, x:cat.x + cat.speed}))
+			cats:x.cats.map(cat => (cat.isAttacking && t - cat.lastAttackStart < cat.attackImageCount) ?
+				{...cat, } 
+				: ((anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? 
+					{...cat, isAttacking:true, lastAttackStart:t, lastAttackEnd:0} 
+					: {...cat, isAttacking:false, x:cat.x + cat.speed, lastAttackStart:0, 
+						lastAttackEnd:(cat.isAttacking ? t : cat.lastAttackEnd) 
+					})))
 		};
 	}
 	function getNextDogPos(x)
@@ -339,8 +355,9 @@ function App() {
 	}
 	function sendEnemy(x)
 	{
-		const index = Math.floor(Math.random() * 3)
-		return {...x, enemies:[...x.enemies, getEnemy(enemyTypes[index], nextUnitId(x.enemies))]}; 
+		//need actual level rules
+		const index = Math.floor(Math.random() * enemyTypes.length)
+		return {...x, enemies:[...x.enemies, getUnit(enemyTypes[index], nextUnitId(x.enemies))]}; 
 	}
 	function attack(x)
 	{
@@ -360,9 +377,9 @@ function App() {
 			catBaseHealth:newCatBaseHealth, 
 			enemyBaseHealth:newEnemyBaseHealth}; 
 	} 
-	function moveCat()
+	function moveCat(time)
 	{
-		setPosition(getNextCatPos)
+		setPosition(x=>getNextCatPos(x, time))
 	}
 
 	const attackButton = beforeBattle?
@@ -382,13 +399,16 @@ function App() {
 //		console.log("next id", nextId)
 		return nextId;
 	}
-	function getCat(type){
-		return {...type, x:initialX, health:type.initialHealth, id:nextCatid(),
+	function getUnit(type, id){
+		return {...type, x:initialX, health:type.initialHealth, id:id,
 			initialIndex: getRandomImageOffset(type), 
+			isAttacking: false,
+			lastAttackStart: 0, 
+			lastAttackEnd: 0, // for waiting between attacks
 		}
 	}
 	function startBattleOnce(){
-		setTime(x=>{if(!x){console.log("starting battle..."); startBattle(); } return x+1});
+		setTime(x=>{if(!x){ console.log("starting battle..."); startBattle(); return 1; } return x});
 	}
 	function addCat(type){
 		const f = 1;
@@ -396,22 +416,17 @@ function App() {
 //		const walk = f*type.width*type.walkingImageCount, attack = f*type.attackWidth*type.attackImageCount;
 //		console.log("total walking width", walk, "total attack width", attack, "total walk+attack width", walk+attack);
 		startBattleOnce();
-		position.cats.push(getCat(type));
+		position.cats.push(getUnit(type, nextCatid()));
 	}
 	function getRandomImageOffset(type){
 		return Math.floor(Math.random() * type.walkingImageCount);
-	}
-	function getEnemy(type, id){
-		return {...type, x:initialX, health:type.initialHealth, id:id, 
-			initialIndex: getRandomImageOffset(type), 
-		};
 	}
 
 	function addEnemy(type){
 		const f = 1;
 		console.log("add enemy", type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
 		startBattleOnce();
-		position.enemies.push(getEnemy(type, nextUnitId(position.enemies)));
+		position.enemies.push(getUnit(type, nextUnitId(position.enemies)));
 	}
 
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
@@ -420,7 +435,8 @@ function App() {
 		<div className="dashboard">
 			{catButtons}
 		</div>
-		<div>
+		<div className="dashboard">
+			<div>Enemies in this level:</div>
 			{enemyButtons}
 		</div>
 	</>
