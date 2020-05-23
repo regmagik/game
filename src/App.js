@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
 import './App.css';
 
+const timerInterval = 333;
+	
+const screenWidth = 320;
+const initialX = 25;
+const initialHealth = 4200; // basic cat initial health (physical fitness 4200, offensive power 335)
+const initialBaseHealth = 525000;
+
 const baseFactor = 2;
 const baseWidth = baseFactor * 40;
 const baseHeight = baseFactor * 80;
 const baseBottom = 1;
 const baseX = 2;
+
 const attackTypes = {
 	singleAttack: 'Single',
 	areaAttack: 'Area'
@@ -149,10 +157,6 @@ function EnemyButton(props) {
 	return <div style={buttonStyle} onClick={onAdd}/>
 }
 function App() {
-	const screenWidth = 320;
-	const initialX = 25;
-	const initialHealth = 50; // basic cat initial health (physical fitness 4200, offensive power 335)
-	const initialBaseHealth = 2500;
 	const unit = {width:25, height:25,
 		// sprite layout: walking - attack - hurt 
 		walkingImageCount: 3, attackImageCount: 4, attackWidth: 25, hurtWidth: 0,
@@ -164,26 +168,38 @@ function App() {
 		initialHealth:initialHealth, knockBacks:3, 
 		attackRange:2, attackPower:1, attackType:attackTypes.singleAttack};
 	const enemyTypes =  [
-		{...unit, type:"doge", width:55, height:60, attackWidth:55, imageToLogicalPxFactor: .5},//sprite sheet 372 x 60 px 
+		{...unit, type:"doge", width:55, height:60, attackWidth:55, imageToLogicalPxFactor: .5, 
+			initialHealth:90, attackPower:8, 
+			speed:5, timeBetweenAttacks:1.8,},//sprite sheet 372 x 60 px 
 		{...unit, type:"snache", 
-			width:75, attackWidth: 80, hurtWidth: 140, walkingImageCount: 4, height:63, speed:2, attackPower:2, 
-			imageToLogicalPxFactor: .5,
+			width:75, attackWidth: 80, hurtWidth: 140, walkingImageCount: 4, height:63, imageToLogicalPxFactor: .5, 
+			initialHealth:100, attackPower:15, 
+			speed:8, 
 		}, 
-		{...unit, type: "baa", width:100, attackWidth: 140, hurtWidth:100, height:87, attackImageCount:7, imageToLogicalPxFactor: .5, knockBacks:2,},
+		{...unit, type: "baa", width:100, attackWidth: 140, hurtWidth:100, height:87, attackImageCount:7, 
+			imageToLogicalPxFactor: .5, 
+			knockBacks:2, initialHealth:500, attackPower:50, speed:7, timeBetweenAttacks:2.8,
+	},
 	//	{...unit, type:"croco", width:35, height:15, speed:3, attackPower:4},
 	];
 
-	const aCat = {...unit, type:"A", speed:2, attackPower:3}
+	const aCat = {...unit, type:"A", speed:2, attackPower:1}
 	const catTypes = [
 		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, imageToLogicalPxFactor: 0.5}, 
 //		{...aCat, type:"gold", width:50, height:58, attackWidth:60, hurtWidth:60, attackImageCount: 4, 
 //			imageToLogicalPxFactor: 0.5}, 
 		{...aCat, type:"B", width:53, height:101, attackWidth: 80, imageToLogicalPxFactor: 0.5,  
-			speed:1, attackPower:1, initialHealth:2*initialHealth, knockBacks:1, timeBetweenAttacks:2.23
+			speed:1, attackPower:1, initialHealth:4*initialHealth, knockBacks:1, timeBetweenAttacks:2.23
 		},
-		{...aCat, type:"axe", speed:3, width:53, height:63, attackWidth: 56, imageToLogicalPxFactor: 0.7, hurtWidth: 36},// 106, 115, 75 x 126 
+		{...aCat, type:"axe", width:53, height:63, attackWidth: 56, hurtWidth: 36,
+			imageToLogicalPxFactor: 0.7, 
+			initialHealth:2*initialHealth, attackPower:1050, speed:12, timeBetweenAttacks:1,
+		},// 106, 115, 75 x 126 
 //		{...aCat, type:"sword", speed:3, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
-		{...aCat, type:"legs", speed:3.5, width:90, height: 306, imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, timeBetweenAttacks:4.6},
+		{...aCat, type:"legs", width:90, height: 306, 
+			imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, 
+			initialHealth:4*initialHealth, attackPower:initialHealth, speed:10, timeBetweenAttacks:4.6,  
+		},
 	];
 	const initialPos = {
 		cats: [],
@@ -226,7 +242,7 @@ function App() {
 	function startTimer()
 	{
 		if(document.timer === undefined)
-			document.timer = setInterval(()=>setTime(moveAll), 333);
+			document.timer = setInterval(()=>setTime(moveAll), timerInterval);
 	}
 	function stopTimer()
 	{
@@ -244,16 +260,18 @@ function App() {
 	{
 //		console.log(x)
 		moveCat(x);
-		moveDog();
-		setPosition(attack);
-		// doge frequency
-		if(x%50===1) setPosition(sendEnemy);
+		moveDog(x);
+		// pass time in addition to position state (alternatively we might include time into the rest of state)
+		setPosition(pos=>attack(pos, x));
+		// automatically add enemies
+		if(x%90===1) setPosition(sendEnemy);
 		return x+1;
 	}
 	// determine if the target would be within the unit's attack range after both move
 	function withinRange(unit, target)
 	{
-		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*Math.max(unit.width, unit.attackWidth) + target.imageToLogicalPxFactor*Math.max(target.width, target.attackWidth) + unit.speed + target.speed) < unit.attackRange;
+		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*unit.width + target.imageToLogicalPxFactor*target.width + unit.speed + target.speed) < unit.attackRange;
+//		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*Math.max(unit.width, unit.attackWidth) + target.imageToLogicalPxFactor*Math.max(target.width, target.attackWidth) + unit.speed + target.speed) < unit.attackRange;
 	}
 	//check if the unit is close to opposite base
 	function canAttackBase(unit)
@@ -265,37 +283,53 @@ function App() {
 	{
 		return targets.some((target)=>withinRange(unit, target));
 	}
+	function inAttackAnimation(unit, t)
+	{
+		return t - unit.lastAttackStart < unit.attackImageCount;
+	}
+	function attackDelayElapsed(unit, tick)
+	{
+		// compare time ticks to seconds by converting both to milliseconds
+		return (tick - unit.lastAttackEnd) * timerInterval > unit.timeBetweenAttacks * 1000;
+	}
 	function getNextCatPos(x, t)
 	{
-		// if a unit is in the middle of animation - it must finish animation 
-		return {...x, 
-			cats:x.cats.map(cat => (cat.isAttacking && t - cat.lastAttackStart < cat.attackImageCount) ?
-				{...cat, } 
-				: ((anyUnitWithinRange(cat, x.enemies) || canAttackBase(cat) ? 
-					{...cat, isAttacking:true, lastAttackStart:t, lastAttackEnd:0} 
-					: {...cat, isAttacking:false, x:cat.x + cat.speed, lastAttackStart:0, 
-						lastAttackEnd:(cat.isAttacking ? t : cat.lastAttackEnd) 
-					})))
+		return {...x, cats:x.cats.map(cat => getNextUnitPos(cat, x.enemies, t))
 		};
 	}
-	function getNextDogPos(x)
+	function getNextUnitPos(unit, others, t)
 	{
-		return {...x, 
-			enemies:x.enemies.map( (unit) => (anyUnitWithinRange(unit, x.cats) || canAttackBase(unit) ? 
-				{...unit, isAttacking:true} : {...unit,isAttacking:false, x:unit.x + unit.speed}))};
+		// if a unit is in the middle of animation - it must finish animation 
+		return (unit.isAttacking && inAttackAnimation(unit, t)) ? unit 
+			: ((anyUnitWithinRange(unit, others) || canAttackBase(unit) ? 
+				{...unit, isAttacking:attackDelayElapsed(unit, t), 
+					lastAttackStart:unit.isAttacking ? unit.lastAttackStart 
+						: (attackDelayElapsed(unit, t)?t:0), 
+					lastAttackEnd:(unit.isAttacking ? t : unit.lastAttackEnd) 
+				} 
+				: {...unit, isAttacking:false, x:unit.x + unit.speed, lastAttackStart:0, 
+					lastAttackEnd:(unit.isAttacking ? t : unit.lastAttackEnd) 
+				}));
+	}
+	function getNextDogPos(x, t)
+	{
+		return {...x, enemies:x.enemies.map( unit => getNextUnitPos(unit, x.cats, t))};
 	}
 	function getSingleTarget(unit, targets){ 
 		return targets.find(target => withinRange(unit, target));
 	}
-	function canAttack(unit, target, oppositeTeam)
+	function canAttack(unit, target, oppositeTeam, time)
 	{
+		const isDamageTime = time - unit.lastAttackStart === unit.attackImageCount;
+		if(!isDamageTime) return false;
+
 		return (unit.attackType === attackTypes.areaAttack) ? withinRange(unit, target)
 			: (getSingleTarget(unit, oppositeTeam) === target);
 	}
 
-	function damageCat(cat, {cats, enemies})
+	function damageCat(cat, {cats, enemies}, t)
 	{
-		const attackers = enemies.filter((unit)=>canAttack(unit, cat, cats));
+		const attackers = enemies.filter((unit)=>canAttack(unit, cat, cats, t));
 		const damage = attackers.reduce(function (a, b) {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
@@ -326,19 +360,19 @@ function App() {
 		}
 		return false;
 	}
-	function calculateHealth({cats, enemies})
+	function calculateHealth({cats, enemies}, t)
 	{
 		// for each cat find all enemies within range and attack them (the first or all within the range)
 		// for each enemy find all cats in range and attack them
-		let newCats = cats.map((cat)=>damageCat(cat, {cats, enemies}))
-		let newEnemies = enemies.map((enemy)=>damageEnemy(enemy, {cats, enemies}))
+		let newCats = cats.map((cat)=>damageCat(cat, {cats, enemies}, t))
+		let newEnemies = enemies.map((enemy)=>damageEnemy(enemy, {cats, enemies}, t))
 		var filteredCats = newCats.filter(function(unit){ return unit.health > 0;});
 		var filteredEnemies = newEnemies.filter(function(unit){ return unit.health > 0;});
 		return {cats:filteredCats, enemies:filteredEnemies};
 	}
-	function damageEnemy(enemy, {cats, enemies})
+	function damageEnemy(enemy, {cats, enemies}, t)
 	{
-		const attackers = cats.filter((unit)=>canAttack(unit, enemy, enemies));
+		const attackers = cats.filter((unit)=>canAttack(unit, enemy, enemies, t));
 		const damage = attackers.reduce(function (a, b) {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
@@ -359,7 +393,7 @@ function App() {
 		const index = Math.floor(Math.random() * enemyTypes.length)
 		return {...x, enemies:[...x.enemies, getUnit(enemyTypes[index], nextUnitId(x.enemies))]}; 
 	}
-	function attack(x)
+	function attack(x, t)
 	{
 		let newCatBaseHealth = x.catBaseHealth-damageBase(x.enemies);
 		if(newCatBaseHealth < 0) 
@@ -373,7 +407,7 @@ function App() {
 			stopTimer()
 			newEnemyBaseHealth = 0;
 		}
-		return {...x, ...calculateHealth(x), 
+		return {...x, ...calculateHealth(x, t), 
 			catBaseHealth:newCatBaseHealth, 
 			enemyBaseHealth:newEnemyBaseHealth}; 
 	} 
@@ -386,8 +420,8 @@ function App() {
 		<button onClick={startBattle}>Attack</button>
 		: null;	
 	
-	function moveDog() {
-		setPosition(getNextDogPos)
+	function moveDog(t) {
+		setPosition(x => getNextDogPos(x, t))
 	}
 	function nextCatid()
 	{
