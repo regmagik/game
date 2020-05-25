@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import './App.css';
 
-const timerInterval = 333;
+const timerInterval = 333; 
 	
 const screenWidth = 320;
 const initialX = 25;
-const initialHealth = 4200; // basic cat initial health (physical fitness 4200, offensive power 335)
-const initialBaseHealth = 525000;
+const initialHealth = 100; // basic cat initial health (physical fitness) can grow to 4200, offensive power 335 with level, treasures, etc.
+const initialBaseHealth = 52000;
 
 const baseFactor = 2;
 const baseWidth = baseFactor * 40;
 const baseHeight = baseFactor * 80;
 const baseBottom = 1;
 const baseX = 2;
+
+const buttonWidth = 40;
+const buttonH = buttonWidth;
 
 const attackTypes = {
 	singleAttack: 'Single',
@@ -81,8 +84,9 @@ function getTotalWidth(unit){
 
 function getBackgroundPositionX(unit, time){
 	const numberOfImages = unit.isAttacking ? unit.attackImageCount : unit.walkingImageCount;
-	const index = unit.isAttacking ? (time - unit.lastAttackStart) % numberOfImages
-		: (unit.initialIndex + time) % numberOfImages;
+	const index = unit.isIdle ? 0 : (unit.isAttacking ? (time - unit.lastAttackStart) % numberOfImages
+			: (unit.initialIndex + time) % numberOfImages);
+
 	const offset = unit.isAttacking ? 
 		(unit.walkingImageCount*unit.width + unit.attackWidth*index) 
 		: unit.width*index;
@@ -111,11 +115,11 @@ function Enemy(props) {
 		backgroundPositionX: getBackgroundPositionX(props.enemy, props.time),
 		backgroundRepeat: "no-repeat"
 	}
-	return <div className="enemy" style={style}> <HealthBar health={props.enemy.health} maxHealth={props.enemy.initialHealth}/> </div>
+	return <div className="enemy" style={style}> 
+		{/* <HealthBar health={props.enemy.health} maxHealth={props.enemy.initialHealth}/> */}
+	</div>
 }
 
-const buttonWidth = 50;
-const buttonH = buttonWidth;
 function CatButton(props) {
 	function onAdd(){
 		props.addCat(props.type)
@@ -166,39 +170,44 @@ function App() {
 		speed:1,// moving speed 
 		timeBetweenAttacks:1.23, // time to wait before unit can attack again
 		initialHealth:initialHealth, knockBacks:3, 
-		attackRange:2, attackPower:1, attackType:attackTypes.singleAttack};
+		attackPower:1, attackRange:2, attackType:attackTypes.singleAttack};
 	const enemyTypes =  [
 		{...unit, type:"doge", width:55, height:60, attackWidth:55, imageToLogicalPxFactor: .5, 
-			initialHealth:90, attackPower:8, 
-			speed:5, timeBetweenAttacks:1.8,},//sprite sheet 372 x 60 px 
+			initialHealth:90, attackPower:8, attackRange:1.1, 
+			speed:.5, timeBetweenAttacks:1.8,},//sprite sheet 372 x 60 px 
 		{...unit, type:"snache", 
 			width:75, attackWidth: 80, hurtWidth: 140, walkingImageCount: 4, height:63, imageToLogicalPxFactor: .5, 
-			initialHealth:100, attackPower:15, 
-			speed:8, 
+			initialHealth:100, attackPower:15, attackRange:1.1,
+			speed:.8, 
 		}, 
 		{...unit, type: "baa", width:100, attackWidth: 140, hurtWidth:100, height:87, attackImageCount:7, 
 			imageToLogicalPxFactor: .5, 
-			knockBacks:2, initialHealth:500, attackPower:50, speed:7, timeBetweenAttacks:2.8,
+			knockBacks:2, initialHealth:500, attackPower:50, attackRange:1.1, //110
+			speed:.7, timeBetweenAttacks:2.8,
 	},
 	//	{...unit, type:"croco", width:35, height:15, speed:3, attackPower:4},
 	];
 
-	const aCat = {...unit, type:"A", speed:2, attackPower:1}
+	const aCat = {...unit, type:"A", speed:1, attackPower:1}
 	const catTypes = [
 		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, imageToLogicalPxFactor: 0.5}, 
 //		{...aCat, type:"gold", width:50, height:58, attackWidth:60, hurtWidth:60, attackImageCount: 4, 
 //			imageToLogicalPxFactor: 0.5}, 
-		{...aCat, type:"B", width:53, height:101, attackWidth: 80, imageToLogicalPxFactor: 0.5,  
-			speed:1, attackPower:1, initialHealth:4*initialHealth, knockBacks:1, timeBetweenAttacks:2.23
+		{...aCat, type:"B", width:53, height:101, attackWidth: 80, imageToLogicalPxFactor: 0.5,
+			attackType:attackTypes.areaAttack,  
+			attackPower:1, initialHealth:4*initialHealth, knockBacks:1,
+			speed:.8, timeBetweenAttacks:2.23
 		},
 		{...aCat, type:"axe", width:53, height:63, attackWidth: 56, hurtWidth: 36,
 			imageToLogicalPxFactor: 0.7, 
-			initialHealth:2*initialHealth, attackPower:1050, speed:12, timeBetweenAttacks:1,
+			attackPower:25, initialHealth:2*initialHealth, 
+			speed:1.2, timeBetweenAttacks:1,
 		},// 106, 115, 75 x 126 
 //		{...aCat, type:"sword", speed:3, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
 		{...aCat, type:"legs", width:90, height: 306, 
 			imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, 
-			initialHealth:4*initialHealth, attackPower:initialHealth, speed:10, timeBetweenAttacks:4.6,  
+			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
+			speed:1, timeBetweenAttacks:4.6,  
 		},
 	];
 	const initialPos = {
@@ -215,7 +224,7 @@ function App() {
 
 	function startBattle()
 	{
-		setTime(0)
+		setTime(1)
 		setPosition(initialPos)
 		setBefore(false);
 		setBattle(true);
@@ -230,6 +239,12 @@ function App() {
 	function resumeBattle()
 	{
 		startTimer();
+	}
+
+	function restartBattle()
+	{
+		stopTimer();
+		startBattle();
 	}
 
 	function leaveBattle()
@@ -270,7 +285,8 @@ function App() {
 	// determine if the target would be within the unit's attack range after both move
 	function withinRange(unit, target)
 	{
-		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*unit.width + target.imageToLogicalPxFactor*target.width + unit.speed + target.speed) < unit.attackRange;
+		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*unit.width + target.imageToLogicalPxFactor*target.width) < unit.attackRange;
+//		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*unit.width + target.imageToLogicalPxFactor*target.width + unit.speed + target.speed) < unit.attackRange;
 //		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*Math.max(unit.width, unit.attackWidth) + target.imageToLogicalPxFactor*Math.max(target.width, target.attackWidth) + unit.speed + target.speed) < unit.attackRange;
 	}
 	//check if the unit is close to opposite base
@@ -287,27 +303,28 @@ function App() {
 	{
 		return t - unit.lastAttackStart < unit.attackImageCount;
 	}
-	function attackDelayElapsed(unit, tick)
-	{
-		// compare time ticks to seconds by converting both to milliseconds
-		return (tick - unit.lastAttackEnd) * timerInterval > unit.timeBetweenAttacks * 1000;
-	}
 	function getNextCatPos(x, t)
 	{
 		return {...x, cats:x.cats.map(cat => getNextUnitPos(cat, x.enemies, t))
 		};
 	}
+	function attackDelayElapsed(unit, tick)
+	{
+		// compare time ticks to seconds by converting both to milliseconds
+		return (tick - unit.lastAttackEnd) * timerInterval > unit.timeBetweenAttacks * 1000;
+	}
 	function getNextUnitPos(unit, others, t)
 	{
+		const isAttackDelayElapsed = attackDelayElapsed(unit, t);
 		// if a unit is in the middle of animation - it must finish animation 
 		return (unit.isAttacking && inAttackAnimation(unit, t)) ? unit 
 			: ((anyUnitWithinRange(unit, others) || canAttackBase(unit) ? 
-				{...unit, isAttacking:attackDelayElapsed(unit, t), 
+				{...unit, isAttacking:isAttackDelayElapsed, isIdle:!isAttackDelayElapsed, 
 					lastAttackStart:unit.isAttacking ? unit.lastAttackStart 
-						: (attackDelayElapsed(unit, t)?t:0), 
+						: (isAttackDelayElapsed ? t : 0), 
 					lastAttackEnd:(unit.isAttacking ? t : unit.lastAttackEnd) 
 				} 
-				: {...unit, isAttacking:false, x:unit.x + unit.speed, lastAttackStart:0, 
+				: {...unit, isAttacking:false, isIdle:false, x:unit.x + unit.speed, lastAttackStart:0, 
 					lastAttackEnd:(unit.isAttacking ? t : unit.lastAttackEnd) 
 				}));
 	}
@@ -326,7 +343,6 @@ function App() {
 		return (unit.attackType === attackTypes.areaAttack) ? withinRange(unit, target)
 			: (getSingleTarget(unit, oppositeTeam) === target);
 	}
-
 	function damageCat(cat, {cats, enemies}, t)
 	{
 		const attackers = enemies.filter((unit)=>canAttack(unit, cat, cats, t));
@@ -436,7 +452,7 @@ function App() {
 	function getUnit(type, id){
 		return {...type, x:initialX, health:type.initialHealth, id:id,
 			initialIndex: getRandomImageOffset(type), 
-			isAttacking: false,
+			isAttacking: false, isIdle:false,
 			lastAttackStart: 0, 
 			lastAttackEnd: 0, // for waiting between attacks
 		}
@@ -501,6 +517,7 @@ function App() {
 		<>
 		<button onClick={pauseBattle}>Pause</button>	
 		<button onClick={resumeBattle}>Resume</button>	
+		<button onClick={restartBattle}>Restart</button>	
 		<button onClick={leaveBattle}>Back</button>	
 		</> : null;	
 		
