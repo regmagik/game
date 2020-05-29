@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './App.css';
 
-const timerInterval = 333; 
+const timerInterval = 350; 
 	
 const screenWidth = 320;
 const initialX = 25;
@@ -36,27 +36,22 @@ function EnemyBase(props) {
 	return <div className="EnemyBase" style={style}>{props.children}<HealthBar health={props.health} maxHealth={props.initialHealth}/></div>
 }
 function HealthBar({health, maxHealth}) {
-	const width = 20;
+	const width = 20, borderWidth = 1;
 	const height = 1;
+	const fractionHealth = health / maxHealth;
+	const color = fractionHealth > .25 ? 'grey' : 'red';
 	const styleHealthBar = {
-		position:"absolute", top: -15,
-		borderColor: 'blue',
-		borderWidth: 1,
-		borderStyle:'solid',
-		width: width,
-		height: height
-		}
-		const percentHealth = (100 * health) / maxHealth;
-		const color = percentHealth > 25 ? 'lime' : 'red';
-		const styleHealthIndicator = {
-			width: (width * health) / maxHealth,
+			position:"absolute", top: -25,
+			borderColor: 'grey',
+			borderLeftColor: color,
+			borderWidth: borderWidth,
+			borderLeftWidth: fractionHealth*width,
+			borderStyle:'solid',
+			width: (1-fractionHealth)*width,
 			height: height,
-			backgroundColor: color
-			}
+		}
 	  
-return <div style={styleHealthBar}>
-			<div style={styleHealthIndicator}></div>
-	</div>
+		return <div style={styleHealthBar} />
 }
 
 function Cat(props) {
@@ -71,7 +66,7 @@ function Cat(props) {
 		backgroundRepeat: "no-repeat"
 	}
 	return <div className="cat" style={style}> 
-		{/* <HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/>  */}
+		<HealthBar health={props.cat.health} maxHealth={props.cat.initialHealth}/> 
 	</div>
 }
 function getBackgroundSize(unit){
@@ -83,9 +78,11 @@ function getTotalWidth(unit){
 }
 
 function getBackgroundPositionX(unit, time){
+	// use the first image for idle unit
+	if(unit.isIdle) return 0;
 	const numberOfImages = unit.isAttacking ? unit.attackImageCount : unit.walkingImageCount;
-	const index = unit.isIdle ? 0 : (unit.isAttacking ? (time - unit.lastAttackStart) % numberOfImages
-			: (unit.initialIndex + time) % numberOfImages);
+	const index = unit.isAttacking ? (time - unit.lastAttackStart) % numberOfImages
+			: (unit.initialIndex + time) % numberOfImages;
 
 	const offset = unit.isAttacking ? 
 		(unit.walkingImageCount*unit.width + unit.attackWidth*index) 
@@ -116,7 +113,7 @@ function Enemy(props) {
 		backgroundRepeat: "no-repeat"
 	}
 	return <div className="enemy" style={style}> 
-		{/* <HealthBar health={props.enemy.health} maxHealth={props.enemy.initialHealth}/> */}
+		<HealthBar health={props.enemy.health} maxHealth={props.enemy.initialHealth}/>
 	</div>
 }
 
@@ -253,11 +250,19 @@ function App() {
 		setBefore(true);
 		setBattle(false);
 	}
-
+	function debugBattle()
+	{
+		stopTimer();
+		step();
+	}
+	function step()
+	{
+		setTime(moveAll);
+	}
 	function startTimer()
 	{
 		if(document.timer === undefined)
-			document.timer = setInterval(()=>setTime(moveAll), timerInterval);
+			document.timer = setInterval(step, timerInterval);
 	}
 	function stopTimer()
 	{
@@ -273,14 +278,15 @@ function App() {
 
 	function moveAll(x)
 	{
-//		console.log(x)
-		moveCat(x);
-		moveDog(x);
+		const t = x+1;
+//		console.log(t)
+		moveCat(t);
+		moveDog(t);
 		// pass time in addition to position state (alternatively we might include time into the rest of state)
-		setPosition(pos=>attack(pos, x));
+		setPosition(pos=>attack(pos, t));
 		// automatically add enemies
 		if(x%90===1) setPosition(sendEnemy);
-		return x+1;
+		return t;
 	}
 	// determine if the target would be within the unit's attack range after both move
 	function withinRange(unit, target)
@@ -299,30 +305,28 @@ function App() {
 	{
 		return targets.some((target)=>withinRange(unit, target));
 	}
-	function inAttackAnimation(unit, t)
-	{
-		return t - unit.lastAttackStart < unit.attackImageCount;
-	}
 	function getNextCatPos(x, t)
 	{
 		return {...x, cats:x.cats.map(cat => getNextUnitPos(cat, x.enemies, t))
 		};
 	}
-	function attackDelayElapsed(unit, tick)
+	function isAttackDelayElapsed(unit, tick)
 	{
 		// compare time ticks to seconds by converting both to milliseconds
-		return (tick - unit.lastAttackEnd) * timerInterval > unit.timeBetweenAttacks * 1000;
+		return (tick - unit.lastAttackEnd) * timerInterval >= unit.timeBetweenAttacks * 1000;
 	}
 	function getNextUnitPos(unit, others, t)
 	{
-		const isAttackDelayElapsed = attackDelayElapsed(unit, t);
+		const attackDelayElapsed = isAttackDelayElapsed(unit, t);
+		const attackComplete = t - unit.lastAttackStart === unit.attackImageCount;
 		// if a unit is in the middle of animation - it must finish animation 
-		return (unit.isAttacking && inAttackAnimation(unit, t)) ? unit 
+		return unit.isAttacking ? {...unit, isAttacking:!attackComplete, 
+				lastAttackEnd:(attackComplete ? t : 0), 
+			}
 			: ((anyUnitWithinRange(unit, others) || canAttackBase(unit) ? 
-				{...unit, isAttacking:isAttackDelayElapsed, isIdle:!isAttackDelayElapsed, 
-					lastAttackStart:unit.isAttacking ? unit.lastAttackStart 
-						: (isAttackDelayElapsed ? t : 0), 
-					lastAttackEnd:(unit.isAttacking ? t : unit.lastAttackEnd) 
+				{...unit, isAttacking:attackDelayElapsed, isIdle:!attackDelayElapsed, 
+					lastAttackStart:(unit.isAttacking ? unit.lastAttackStart 
+						: (attackDelayElapsed ? t : 0)), 					 
 				} 
 				: {...unit, isAttacking:false, isIdle:false, x:unit.x + unit.speed, lastAttackStart:0, 
 					lastAttackEnd:(unit.isAttacking ? t : unit.lastAttackEnd) 
@@ -337,8 +341,9 @@ function App() {
 	}
 	function canAttack(unit, target, oppositeTeam, time)
 	{
-		const isDamageTime = time - unit.lastAttackStart === unit.attackImageCount;
+		const isDamageTime = time - unit.lastAttackStart === unit.attackImageCount - 1;
 		if(!isDamageTime) return false;
+		console.log(unit.type, "can damage", target.type);
 
 		return (unit.attackType === attackTypes.areaAttack) ? withinRange(unit, target)
 			: (getSingleTarget(unit, oppositeTeam) === target);
@@ -519,6 +524,7 @@ function App() {
 		<button onClick={resumeBattle}>Resume</button>	
 		<button onClick={restartBattle}>Restart</button>	
 		<button onClick={leaveBattle}>Back</button>	
+		<button onClick={debugBattle}>Debug</button>	
 		</> : null;	
 		
   return (
