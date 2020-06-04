@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import './App.css';
 
 const timerInterval = 350; 
-	
+const speedFactor = .4;	
 const screenWidth = 320;
 const initialX = 25;
 const initialHealth = 100; // basic cat initial health (physical fitness) can grow to 4200, offensive power 335 with level, treasures, etc.
-const initialBaseHealth = 52000;
+const initialBaseHealth = 5000;
 
 const baseFactor = 2;
 const baseWidth = baseFactor * 40;
@@ -35,20 +35,27 @@ function EnemyBase(props) {
 	}
 	return <div className="EnemyBase" style={style}>{props.children}<HealthBar health={props.health} maxHealth={props.initialHealth}/></div>
 }
-function HealthBar({health, maxHealth}) {
-	const width = 20, borderWidth = 1;
-	const height = 1;
+function HealthBar({health, maxHealth, label}) {
+	const width = 24, borderWidth = 0;
+	const height = 4;
 	const fractionHealth = health / maxHealth;
-	const color = fractionHealth > .25 ? 'grey' : 'red';
+	const borderLeftWidth = fractionHealth*width;
+	const borderRightWidth = width - borderLeftWidth;
+	const colorLeft = 'grey';
+	const colorRight = 'red';
+//	const colorRight = fractionHealth > .25 ? 'yellow' : 'red';
 	const styleHealthBar = {
-			position:"absolute", top: -25,
-			borderColor: 'grey',
-			borderLeftColor: color,
-			borderWidth: borderWidth,
-			borderLeftWidth: fractionHealth*width,
+			position:"absolute", top: -height, left:'50%',
+			backgroundColor: colorLeft,
+			borderLeftColor: colorLeft,
+			borderRightColor: colorRight,
+			opacity:'80%',
+			borderWidth: borderWidth, borderRadius:2,
+			borderLeftWidth: borderLeftWidth, borderRightWidth:borderRightWidth,
 			borderStyle:'solid',
-			width: (1-fractionHealth)*width,
+			width: 0, // consider using box model
 			height: height,
+			padding:0,margin:"auto",//flexGrow:0,flexShrink:0,
 		}
 	  
 		return <div style={styleHealthBar} />
@@ -164,47 +171,49 @@ function App() {
 		imageToLogicalPxFactor: 1,
 		cost:75, 
 		timeToMake:2, // time to wait before adding another unit of this type, seconds. 
-		speed:1,// moving speed 
+		speed:speedFactor*10,// moving speed 
 		timeBetweenAttacks:1.23, // time to wait before unit can attack again
 		initialHealth:initialHealth, knockBacks:3, 
 		attackPower:1, attackRange:2, attackType:attackTypes.singleAttack};
 	const enemyTypes =  [
 		{...unit, type:"doge", width:55, height:60, attackWidth:55, imageToLogicalPxFactor: .5, 
 			initialHealth:90, attackPower:8, attackRange:1.1, 
-			speed:.5, timeBetweenAttacks:1.8,},//sprite sheet 372 x 60 px 
+			speed:speedFactor*5, timeBetweenAttacks:1.8,},//sprite sheet 372 x 60 px 
 		{...unit, type:"snache", 
 			width:75, attackWidth: 80, hurtWidth: 140, walkingImageCount: 4, height:63, imageToLogicalPxFactor: .5, 
 			initialHealth:100, attackPower:15, attackRange:1.1,
-			speed:.8, 
+			speed:speedFactor*8, 
 		}, 
 		{...unit, type: "baa", width:100, attackWidth: 140, hurtWidth:100, height:87, attackImageCount:7, 
 			imageToLogicalPxFactor: .5, 
 			knockBacks:2, initialHealth:500, attackPower:50, attackRange:1.1, //110
-			speed:.7, timeBetweenAttacks:2.8,
+			speed:speedFactor*7, timeBetweenAttacks:2.8,
 	},
-	//	{...unit, type:"croco", width:35, height:15, speed:3, attackPower:4},
+	//	{...unit, type:"croco", width:35, height:15, speed:speedFactor*3, attackPower:4},
 	];
 
-	const aCat = {...unit, type:"A", speed:1, attackPower:1}
+	const aCat = {...unit, type:"A", speed:speedFactor*10}
 	const catTypes = [
-		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, imageToLogicalPxFactor: 0.5}, 
+		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, imageToLogicalPxFactor: 0.5,
+			attackPower:8, 
+		}, 
 //		{...aCat, type:"gold", width:50, height:58, attackWidth:60, hurtWidth:60, attackImageCount: 4, 
 //			imageToLogicalPxFactor: 0.5}, 
 		{...aCat, type:"B", width:53, height:101, attackWidth: 80, imageToLogicalPxFactor: 0.5,
 			attackType:attackTypes.areaAttack,  
-			attackPower:1, initialHealth:4*initialHealth, knockBacks:1,
-			speed:.8, timeBetweenAttacks:2.23
+			attackPower:2, initialHealth:4*initialHealth, knockBacks:1,
+			speed:speedFactor*8, timeBetweenAttacks:2.23
 		},
 		{...aCat, type:"axe", width:53, height:63, attackWidth: 56, hurtWidth: 36,
 			imageToLogicalPxFactor: 0.7, 
 			attackPower:25, initialHealth:2*initialHealth, 
-			speed:1.2, timeBetweenAttacks:1,
+			speed:speedFactor*12, timeBetweenAttacks:1,
 		},// 106, 115, 75 x 126 
 //		{...aCat, type:"sword", speed:3, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
 		{...aCat, type:"legs", width:90, height: 306, 
 			imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, 
 			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
-			speed:1, timeBetweenAttacks:4.6,  
+			speed:speedFactor*10, timeBetweenAttacks:4.6,  
 		},
 	];
 	const initialPos = {
@@ -262,12 +271,16 @@ function App() {
 	function startTimer()
 	{
 		if(document.timer === undefined)
+		{
+			console.log("setInterval", timerInterval)
 			document.timer = setInterval(step, timerInterval);
+		}
 	}
 	function stopTimer()
 	{
 		if(document.timer === undefined) return;
 		clearInterval(document.timer);
+		console.log("clearInterval", document.timer)
 		document.timer = undefined;
 	}
 
@@ -279,13 +292,13 @@ function App() {
 	function moveAll(x)
 	{
 		const t = x+1;
-//		console.log(t)
+		console.log(t)
 		moveCat(t);
 		moveDog(t);
 		// pass time in addition to position state (alternatively we might include time into the rest of state)
 		setPosition(pos=>attack(pos, t));
 		// automatically add enemies
-		if(x%90===1) setPosition(sendEnemy);
+		if(t%500===5) setPosition(sendEnemy);
 		return t;
 	}
 	// determine if the target would be within the unit's attack range after both move
@@ -299,6 +312,11 @@ function App() {
 	function canAttackBase(unit)
 	{
 		return screenWidth - baseX - baseWidth  - (unit.x + unit.imageToLogicalPxFactor*unit.width + unit.speed ) < unit.attackRange;
+	}
+	//check if the unit can damage opposite base
+	function canDamageBase(unit, time)
+	{
+		return isDamageTime(unit, time) && canAttackBase(unit);
 	}
 	// determine if any target would be within unit's attack range after move
 	function anyUnitWithinRange(unit, targets)
@@ -318,19 +336,20 @@ function App() {
 	function getNextUnitPos(unit, others, t)
 	{
 		const attackDelayElapsed = isAttackDelayElapsed(unit, t);
+		const anyTargetsInRange = anyUnitWithinRange(unit, others) || canAttackBase(unit);
 		const attackComplete = t - unit.lastAttackStart === unit.attackImageCount;
 		// if a unit is in the middle of animation - it must finish animation 
-		return unit.isAttacking ? {...unit, isAttacking:!attackComplete, 
+		return unit.isAttacking ? {...unit, isAttacking:anyTargetsInRange && !attackComplete, 
 				lastAttackEnd:(attackComplete ? t : 0), 
 			}
-			: ((anyUnitWithinRange(unit, others) || canAttackBase(unit) ? 
+			: (anyTargetsInRange ? 
 				{...unit, isAttacking:attackDelayElapsed, isIdle:!attackDelayElapsed, 
 					lastAttackStart:(unit.isAttacking ? unit.lastAttackStart 
 						: (attackDelayElapsed ? t : 0)), 					 
 				} 
 				: {...unit, isAttacking:false, isIdle:false, x:unit.x + unit.speed, lastAttackStart:0, 
 					lastAttackEnd:(unit.isAttacking ? t : unit.lastAttackEnd) 
-				}));
+				});
 	}
 	function getNextDogPos(x, t)
 	{
@@ -339,11 +358,14 @@ function App() {
 	function getSingleTarget(unit, targets){ 
 		return targets.find(target => withinRange(unit, target));
 	}
+	function isDamageTime(unit, time)
+	{
+		return time - unit.lastAttackStart === unit.attackImageCount - 1;
+	}
 	function canAttack(unit, target, oppositeTeam, time)
 	{
-		const isDamageTime = time - unit.lastAttackStart === unit.attackImageCount - 1;
-		if(!isDamageTime) return false;
-		console.log(unit.type, "can damage", target.type);
+		if(!isDamageTime(unit, time)) return false;
+//		console.log(unit.type, "can damage", target.type);
 
 		return (unit.attackType === attackTypes.areaAttack) ? withinRange(unit, target)
 			: (getSingleTarget(unit, oppositeTeam) === target);
@@ -401,8 +423,8 @@ function App() {
 		return {...enemy, health: enemy.health - damage,
 			x:isKnockback(enemy, damage) ? (enemy.x - 30) : enemy.x}
 	}
-	function damageBase(units){
-		const attackers = units.filter((unit)=>canAttackBase(unit));
+	function damageBase(units, t){
+		const attackers = units.filter((unit)=>canDamageBase(unit, t));
 		const damage = attackers.reduce(function (a, b) {
 			return b.attackPower == null ? a : a + b.attackPower;
 		}, 0)
@@ -412,17 +434,18 @@ function App() {
 	{
 		//need actual level rules
 		const index = Math.floor(Math.random() * enemyTypes.length)
+		console.log("send", enemyTypes[index].type);
 		return {...x, enemies:[...x.enemies, getUnit(enemyTypes[index], nextUnitId(x.enemies))]}; 
 	}
 	function attack(x, t)
 	{
-		let newCatBaseHealth = x.catBaseHealth-damageBase(x.enemies);
+		let newCatBaseHealth = x.catBaseHealth-damageBase(x.enemies, t);
 		if(newCatBaseHealth < 0) 
 		{
 			stopTimer()
 			newCatBaseHealth = 0;
 		}
-		let newEnemyBaseHealth = x.enemyBaseHealth-damageBase(x.cats);
+		let newEnemyBaseHealth = x.enemyBaseHealth-damageBase(x.cats, t);
 		if(newEnemyBaseHealth < 0) 
 		{
 			stopTimer()
@@ -463,11 +486,14 @@ function App() {
 		}
 	}
 	function startBattleOnce(){
-		setTime(x=>{if(!x){ console.log("starting battle..."); startBattle(); return 1; } return x});
+		setTime(x=>{//console.log("startBattleOnce...");
+			if(!x){ console.log("starting battle..."); startBattle(); return 1; } 
+			return x+1});
 	}
 	function addCat(type){
-		const f = 1;
-		console.log("add cat", type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
+		console.log("add cat", type.type);
+//		const f = 1;
+//		console.log(type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
 //		const walk = f*type.width*type.walkingImageCount, attack = f*type.attackWidth*type.attackImageCount;
 //		console.log("total walking width", walk, "total attack width", attack, "total walk+attack width", walk+attack);
 		startBattleOnce();

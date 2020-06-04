@@ -21,7 +21,6 @@
   background: url(Background.png);
   background-repeat: no-repeat;
   background-size: cover;
-  image-orientation: center;
 }
 
 .cat{
@@ -31,7 +30,6 @@
   transition: right 1s;
 }
 .enemy{
-	background-size: contain;
 	background-repeat: no-repeat;
 	position: absolute;
 -webkit-transition: left 1s; 
