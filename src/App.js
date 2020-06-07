@@ -45,7 +45,7 @@ function HealthBar({health, maxHealth, label}) {
 	const colorRight = 'red';
 //	const colorRight = fractionHealth > .25 ? 'yellow' : 'red';
 	const styleHealthBar = {
-			position:"absolute", top: -height, left:'50%',
+			position:"absolute", top: -height, right:0,
 			backgroundColor: colorLeft,
 			borderLeftColor: colorLeft,
 			borderRightColor: colorRight,
@@ -55,7 +55,7 @@ function HealthBar({health, maxHealth, label}) {
 			borderStyle:'solid',
 			width: 0, // consider using box model
 			height: height,
-			padding:0,margin:"auto",//flexGrow:0,flexShrink:0,
+			padding:0,//marginLeft:"auto",//flexGrow:0,flexShrink:0,
 		}
 	  
 		return <div style={styleHealthBar} />
@@ -211,9 +211,19 @@ function App() {
 		},// 106, 115, 75 x 126 
 //		{...aCat, type:"sword", speed:3, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
 		{...aCat, type:"legs", width:90, height: 306, 
-			imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, 
-			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
-			speed:speedFactor*10, timeBetweenAttacks:4.6,  
+		imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, 
+		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
+		speed:speedFactor*10, timeBetweenAttacks:4.6,  
+		},
+		{...aCat, type:"cow", width:109, height: 120, 
+		imageToLogicalPxFactor:0.4, walkingImageCount:4, attackWidth:150, hurtWidth:156,
+		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
+		speed:speedFactor*30, timeBetweenAttacks:.3,  
+		},
+		{...aCat, type:"giraffe", width:100, height: 160, 
+		imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:5, attackWidth:168, hurtWidth:262, 
+		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
+		speed:speedFactor*30, timeBetweenAttacks:.3,  
 		},
 	];
 	const initialPos = {
@@ -340,7 +350,7 @@ function App() {
 		const attackComplete = t - unit.lastAttackStart === unit.attackImageCount;
 		// if a unit is in the middle of animation - it must finish animation 
 		return unit.isAttacking ? {...unit, isAttacking:anyTargetsInRange && !attackComplete, 
-				lastAttackEnd:(attackComplete ? t : 0), 
+				lastAttackEnd:(attackComplete ? t : 0), isIdle:attackComplete, 
 			}
 			: (anyTargetsInRange ? 
 				{...unit, isAttacking:attackDelayElapsed, isIdle:!attackDelayElapsed, 
@@ -492,8 +502,8 @@ function App() {
 	}
 	function addCat(type){
 		console.log("add cat", type.type);
-//		const f = 1;
-//		console.log(type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
+		const f = 1;
+		console.log(type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
 //		const walk = f*type.width*type.walkingImageCount, attack = f*type.attackWidth*type.attackImageCount;
 //		console.log("total walking width", walk, "total attack width", attack, "total walk+attack width", walk+attack);
 		startBattleOnce();
