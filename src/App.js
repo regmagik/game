@@ -217,13 +217,18 @@ function App() {
 		},
 		{...aCat, type:"cow", width:109, height: 120, 
 		imageToLogicalPxFactor:0.4, walkingImageCount:4, attackWidth:150, hurtWidth:156,
-		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
+		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:2, 
 		speed:speedFactor*30, timeBetweenAttacks:.3,  
 		},
 		{...aCat, type:"giraffe", width:100, height: 160, 
 		imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:5, attackWidth:168, hurtWidth:262, 
 		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
 		speed:speedFactor*30, timeBetweenAttacks:.3,  
+		},
+		{...aCat, type:"dragon", width:114, height: 183, 
+		imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:4, attackWidth:210, hurtWidth:120, 
+		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:22, 
+		speed:speedFactor*10, timeBetweenAttacks:2.3,  
 		},
 	];
 	const initialPos = {
@@ -523,11 +528,12 @@ function App() {
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
 	const catButtons = catTypes.map((cat, i)=><CatButton type={cat} addCat={addCat} key={i}/>);
 	const gameControls = <>
+		<div>Click buttons to send cats into the battle:</div>
 		<div className="dashboard">
 			{catButtons}
 		</div>
+		<div>Enemies in this level:</div>
 		<div className="dashboard">
-			<div>Enemies in this level:</div>
 			{enemyButtons}
 		</div>
 	</>
