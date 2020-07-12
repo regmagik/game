@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import './App.css';
 
-const timerInterval = 350; 
-const speedFactor = .4;	
+const timerInterval = 300; 
+const speedFactor = .5;	
 const screenWidth = 320;
 const initialX = 25;
 const initialHealth = 100; // basic cat initial health (physical fitness) can grow to 4200, offensive power 335 with level, treasures, etc.
 const initialBaseHealth = 5000;
 
-const baseFactor = 2;
+const baseFactor = 1.8;
 const baseWidth = baseFactor * 40;
 const baseHeight = baseFactor * 80;
 const baseBottom = 1;
 const baseX = 2;
 
-const buttonWidth = 40;
+const buttonWidth = 32;
 const buttonH = buttonWidth;
 
 const attackTypes = {
@@ -23,7 +23,7 @@ const attackTypes = {
 }
 function CatBase(props) {
 	const style = {
-		width:baseWidth,height:baseHeight, right:baseX, bottom: baseBottom,
+		width:baseWidth, height:baseHeight, right:baseX, bottom: baseBottom,
 		backgroundImage:"url('catBase.png')"
 	}
 	return <div className="CatBase" style={style}>{props.children}<HealthBar health={props.health} maxHealth={props.initialHealth}/></div>
@@ -42,8 +42,7 @@ function HealthBar({health, maxHealth, label}) {
 	const borderLeftWidth = fractionHealth*width;
 	const borderRightWidth = width - borderLeftWidth;
 	const colorLeft = 'grey';
-	const colorRight = 'red';
-//	const colorRight = fractionHealth > .25 ? 'yellow' : 'red';
+	const colorRight = fractionHealth > .25 ? 'orange' : 'red';
 	const styleHealthBar = {
 			position:"absolute", top: -height, right:0,
 			backgroundColor: colorLeft,
@@ -132,7 +131,7 @@ function CatButton(props) {
 		width:buttonWidth,
 		height:buttonH,
 		float:"right",
-		border: 1, borderColor:"white", borderWidth: 1, borderStyle: 'solid',
+//		border: 1, borderColor:"white", borderWidth: 1, borderStyle: 'solid',
 		marginLeft: 1,
 		paddingBottom: 1,
 	}
@@ -200,35 +199,39 @@ function App() {
 //		{...aCat, type:"gold", width:50, height:58, attackWidth:60, hurtWidth:60, attackImageCount: 4, 
 //			imageToLogicalPxFactor: 0.5}, 
 		{...aCat, type:"B", width:53, height:101, attackWidth: 80, imageToLogicalPxFactor: 0.5,
-			attackType:attackTypes.areaAttack,  
+			attackType:attackTypes.areaAttack,  attackRange:8,  
 			attackPower:2, initialHealth:4*initialHealth, knockBacks:1,
 			speed:speedFactor*8, timeBetweenAttacks:2.23
 		},
-		{...aCat, type:"axe", width:53, height:63, attackWidth: 56, hurtWidth: 36,
-			imageToLogicalPxFactor: 0.7, 
-			attackPower:25, initialHealth:2*initialHealth, 
-			speed:speedFactor*12, timeBetweenAttacks:1,
+		{...aCat, type:"wall", width:71, height:143, attackWidth: 160, walkingImageCount: 3, attackImageCount: 7, hurtWidth:80, 
+			imageToLogicalPxFactor: 0.4,
+			attackType:attackTypes.areaAttack,  attackRange:8, 
+			attackPower:2, initialHealth:4*initialHealth, knockBacks:1,
+			speed:speedFactor*8, timeBetweenAttacks:2.23
+		},
+		{...aCat, type:"axe", width:53, height:63, attackWidth: 56, hurtWidth: 36, imageToLogicalPxFactor: 0.7, 
+			attackPower:25,  attackRange:3, initialHealth:2*initialHealth, speed:speedFactor*12, timeBetweenAttacks:1,
 		},// 106, 115, 75 x 126 
-//		{...aCat, type:"sword", speed:3, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
+		{...aCat, type:"sword", speed:speedFactor*12, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
 		{...aCat, type:"legs", width:90, height: 306, 
-		imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, 
-		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
-		speed:speedFactor*10, timeBetweenAttacks:4.6,  
+			imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, 
+			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
+			speed:speedFactor*10, timeBetweenAttacks:4.6,  
 		},
 		{...aCat, type:"cow", width:109, height: 120, 
-		imageToLogicalPxFactor:0.4, walkingImageCount:4, attackWidth:150, hurtWidth:156,
-		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:2, 
-		speed:speedFactor*30, timeBetweenAttacks:.3,  
+			imageToLogicalPxFactor:0.4, walkingImageCount:4, attackWidth:150, hurtWidth:156,
+			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:1.5, 
+			speed:speedFactor*30, timeBetweenAttacks:.3,  
 		},
 		{...aCat, type:"giraffe", width:100, height: 160, 
-		imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:5, attackWidth:168, hurtWidth:262, 
-		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
-		speed:speedFactor*30, timeBetweenAttacks:.3,  
+			imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:5, attackWidth:168, hurtWidth:262, 
+			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
+			speed:speedFactor*30, timeBetweenAttacks:.3,  
 		},
 		{...aCat, type:"dragon", width:114, height: 183, 
-		imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:4, attackWidth:210, hurtWidth:120, 
-		initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:22, 
-		speed:speedFactor*10, timeBetweenAttacks:2.3,  
+			imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:4, attackWidth:210, hurtWidth:120, 
+			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:22, 
+			speed:speedFactor*10, timeBetweenAttacks:2.3,  
 		},
 	];
 	const initialPos = {
@@ -319,14 +322,14 @@ function App() {
 	// determine if the target would be within the unit's attack range after both move
 	function withinRange(unit, target)
 	{
-		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*unit.width + target.imageToLogicalPxFactor*target.width) < unit.attackRange;
+		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*unit.attackWidth + target.imageToLogicalPxFactor*target.attackWidth) < unit.attackRange;
 //		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*unit.width + target.imageToLogicalPxFactor*target.width + unit.speed + target.speed) < unit.attackRange;
 //		return screenWidth - baseX - (unit.x + target.x + unit.imageToLogicalPxFactor*Math.max(unit.width, unit.attackWidth) + target.imageToLogicalPxFactor*Math.max(target.width, target.attackWidth) + unit.speed + target.speed) < unit.attackRange;
 	}
 	//check if the unit is close to opposite base
 	function canAttackBase(unit)
 	{
-		return screenWidth - baseX - baseWidth  - (unit.x + unit.imageToLogicalPxFactor*unit.width + unit.speed ) < unit.attackRange;
+		return screenWidth - baseX - baseWidth  - (unit.x + unit.imageToLogicalPxFactor*unit.attackWidth + unit.speed ) < unit.attackRange;
 	}
 	//check if the unit can damage opposite base
 	function canDamageBase(unit, time)
@@ -528,7 +531,7 @@ function App() {
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
 	const catButtons = catTypes.map((cat, i)=><CatButton type={cat} addCat={addCat} key={i}/>);
 	const gameControls = <>
-		<div>Click buttons to send cats into the battle:</div>
+		<div>Click to send cats into the battle:</div>
 		<div className="dashboard">
 			{catButtons}
 		</div>
