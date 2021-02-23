@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './App.css';
-
-const timerInterval = 300; 
+console.log("v1");
+const timerInterval = 200; 
 const speedFactor = .5;	
 const screenWidth = 320;
 const initialX = 25;
@@ -17,6 +17,10 @@ const baseX = 2;
 const buttonWidth = 32;
 const buttonH = buttonWidth;
 
+let nextUnitIdGlobal = 1;
+function nextUnitId() {
+	return ++nextUnitIdGlobal;
+}
 const attackTypes = {
 	singleAttack: 'Single',
 	areaAttack: 'Area'
@@ -302,23 +306,24 @@ function App() {
 		document.timer = undefined;
 	}
 
-	// React.useEffect( () => {	console.log("useEffect")
-	// 	const i_id = setInterval(() => {setPosition(moveAll);},1000);
-	// 	return () => { clearInterval(i_id);	}
-	// },[]);
-
 	function moveAll(x)
 	{
 		const t = x+1;
-		console.log(t)
+//		console.log(t)
 		moveCat(t);
 		moveDog(t);
 		// pass time in addition to position state (alternatively we might include time into the rest of state)
 		setPosition(pos=>attack(pos, t));
-		// automatically add enemies
-		if(t%500===5) setPosition(sendEnemy);
+	// automatically add enemies
+		if(t%45===5) setPosition(sendEnemy);
 		return t;
 	}
+
+	// React.useEffect( () => {	console.log("useEffect");
+	// 	startTimer();
+	// 	return stopTimer;
+	// 	}, []);
+
 	// determine if the target would be within the unit's attack range after both move
 	function withinRange(unit, target)
 	{
@@ -374,7 +379,8 @@ function App() {
 		return {...x, enemies:x.enemies.map( unit => getNextUnitPos(unit, x.cats, t))};
 	}
 	function getSingleTarget(unit, targets){ 
-		return targets.find(target => withinRange(unit, target));
+		//make a copy of the array before sorting
+		return [...targets].sort((a,b) => b.x - a.x).find(target => withinRange(unit, target));
 	}
 	function isDamageTime(unit, time)
 	{
@@ -388,17 +394,18 @@ function App() {
 		return (unit.attackType === attackTypes.areaAttack) ? withinRange(unit, target)
 			: (getSingleTarget(unit, oppositeTeam) === target);
 	}
-	function damageCat(cat, {cats, enemies}, t)
+	function damageUnit(targret, team, others, t)
 	{
-		const attackers = enemies.filter((unit)=>canAttack(unit, cat, cats, t));
-		const damage = attackers.reduce(function (a, b) {
-			return b.attackPower == null ? a : a + b.attackPower;
-		}, 0)
-//		console.log("damage", damage)
-		const newCat = {...cat, health: cat.health - damage, 
-			x:isKnockback(cat, damage) ? (cat.x - 30) : cat.x}
+		const attackers = others.filter((foe)=>canAttack(foe, targret, team, t));
+		const damage = attackers.reduce((a, b) => b.attackPower == null ? a : (a + b.attackPower), 0);
+		if(damage > targret.health)
+			console.log(targret.type, targret.id, "is dead.")
+		else if(damage > 0)
+			console.log(targret.type, targret.id, "damage", damage)
+		const newUnit = {...targret, health: targret.health - damage, 
+			x:isKnockback(targret, damage) ? (targret.x - 30) : targret.x}
 		
-		return newCat;
+		return newUnit;
 	}
 	function isKnockback(unit, damage)
 	{
@@ -423,23 +430,12 @@ function App() {
 	}
 	function calculateHealth({cats, enemies}, t)
 	{
-		// for each cat find all enemies within range and attack them (the first or all within the range)
-		// for each enemy find all cats in range and attack them
-		let newCats = cats.map((cat)=>damageCat(cat, {cats, enemies}, t))
-		let newEnemies = enemies.map((enemy)=>damageEnemy(enemy, {cats, enemies}, t))
+		// for each unit find all enemies who can attack it and apply damage
+		let newCats = cats.map((cat)=>damageUnit(cat, cats, enemies, t))
+		let newEnemies = enemies.map((enemy)=>damageUnit(enemy, enemies, cats, t))
 		var filteredCats = newCats.filter(function(unit){ return unit.health > 0;});
 		var filteredEnemies = newEnemies.filter(function(unit){ return unit.health > 0;});
 		return {cats:filteredCats, enemies:filteredEnemies};
-	}
-	function damageEnemy(enemy, {cats, enemies}, t)
-	{
-		const attackers = cats.filter((unit)=>canAttack(unit, enemy, enemies, t));
-		const damage = attackers.reduce(function (a, b) {
-			return b.attackPower == null ? a : a + b.attackPower;
-		}, 0)
-		//console.log("damage", damage)
-		return {...enemy, health: enemy.health - damage,
-			x:isKnockback(enemy, damage) ? (enemy.x - 30) : enemy.x}
 	}
 	function damageBase(units, t){
 		const attackers = units.filter((unit)=>canDamageBase(unit, t));
@@ -452,8 +448,8 @@ function App() {
 	{
 		//need actual level rules
 		const index = Math.floor(Math.random() * enemyTypes.length)
-		console.log("send", enemyTypes[index].type);
-		return {...x, enemies:[...x.enemies, getUnit(enemyTypes[index], nextUnitId(x.enemies))]}; 
+//		console.log("send", enemyTypes[index].type);
+		return {...x, enemies:[...x.enemies, getUnit(enemyTypes[index])]}; 
 	}
 	function attack(x, t)
 	{
@@ -485,17 +481,10 @@ function App() {
 	function moveDog(t) {
 		setPosition(x => getNextDogPos(x, t))
 	}
-	function nextCatid()
-	{
-		return position.cats.length ? Math.max(...position.cats.map(c=>c.id))+1 : 1;
-	}
-	function nextUnitId(units)
-	{
-		const nextId = (units.length > 0) ? (Math.max(...units.map(e=>e.id))+1) : 2;
-//		console.log("next id", nextId)
-		return nextId;
-	}
-	function getUnit(type, id){
+
+	function getUnit(type){
+		const id = nextUnitId();
+		console.log(id, type.type);
 		return {...type, x:initialX, health:type.initialHealth, id:id,
 			initialIndex: getRandomImageOffset(type), 
 			isAttacking: false, isIdle:false,
@@ -510,22 +499,26 @@ function App() {
 	}
 	function addCat(type){
 		console.log("add cat", type.type);
-		const f = 1;
-		console.log(type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
+//		const f = 1;
+//		console.log(type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
 //		const walk = f*type.width*type.walkingImageCount, attack = f*type.attackWidth*type.attackImageCount;
 //		console.log("total walking width", walk, "total attack width", attack, "total walk+attack width", walk+attack);
 		startBattleOnce();
-		position.cats.push(getUnit(type, nextCatid()));
+		setPosition(x => ({...x, 
+			cats:[...x.cats, getUnit(type)]
+		}));
 	}
 	function getRandomImageOffset(type){
 		return Math.floor(Math.random() * type.walkingImageCount);
 	}
 
 	function addEnemy(type){
-		const f = 1;
-		console.log("add enemy", type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
+//		const f = 1;
+//		console.log("add enemy", type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
 		startBattleOnce();
-		position.enemies.push(getUnit(type, nextUnitId(position.enemies)));
+		setPosition(x => ({...x, 
+			enemies:[...x.enemies, getUnit(type)]
+		}));
 	}
 
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
