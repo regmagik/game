@@ -14,7 +14,7 @@ const baseHeight = baseFactor * 80;
 const baseBottom = 1;
 const baseX = 2;
 
-const buttonWidth = 32;
+const buttonWidth = 44;
 const buttonH = buttonWidth;
 
 const attackTypes = {
@@ -166,7 +166,8 @@ function EnemyButton(props) {
 function App() {
 	const unit = {width:25, height:25,
 		// sprite layout: walking - attack - hurt 
-		walkingImageCount: 3, attackImageCount: 4, attackWidth: 25, hurtWidth: 0,
+		walkingImageCount: 3, attackImageCount: 4, damageOn: 3,
+		attackWidth: 25, hurtWidth: 0,
 		imageToLogicalPxFactor: 1,
 		cost:75, 
 		timeToMake:2, // time to wait before adding another unit of this type, seconds. 
@@ -183,17 +184,27 @@ function App() {
 			initialHealth:100, attackPower:15, attackRange:1.1,
 			speed:speedFactor*8, 
 		}, 
-		{...unit, type: "baa", width:100, attackWidth: 140, hurtWidth:100, height:87, attackImageCount:7, 
+//		todo: remove some images
+		{...unit, type: "baa", width:100, attackWidth: 110, hurtWidth:100, 
+			height:87, attackImageCount:7, damageOn: 5, 
 			imageToLogicalPxFactor: .5, 
 			knockBacks:2, initialHealth:500, attackPower:50, attackRange:1.1, //110
 			speed:speedFactor*7, timeBetweenAttacks:2.8,
-	},
+		},
+		// removed some images
+		// {...unit, type: "baa2", width:85, attackWidth: 105, hurtWidth:500, 
+		// 	height:87, walkingImageCount:2, attackImageCount:2, damageOn: 1, 
+		// 	imageToLogicalPxFactor: .5, 
+		// 	knockBacks:2, initialHealth:500, attackPower:50, attackRange:1.1, //110
+		// 	speed:speedFactor*7, timeBetweenAttacks:.5,
+		// },
 	//	{...unit, type:"croco", width:35, height:15, speed:speedFactor*3, attackPower:4},
 	];
 
 	const aCat = {...unit, type:"A", speed:speedFactor*10}
 	const catTypes = [
-		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, imageToLogicalPxFactor: 0.5,
+		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, damageOn: 2,
+			imageToLogicalPxFactor: 0.5,
 			attackPower:8, 
 		}, 
 //		{...aCat, type:"gold", width:50, height:58, attackWidth:60, hurtWidth:60, attackImageCount: 4, 
@@ -203,16 +214,16 @@ function App() {
 			attackPower:2, initialHealth:4*initialHealth, knockBacks:1,
 			speed:speedFactor*8, timeBetweenAttacks:2.23
 		},
-		{...aCat, type:"wall", width:71, height:143, attackWidth: 160, walkingImageCount: 3, attackImageCount: 7, hurtWidth:80, 
-			imageToLogicalPxFactor: 0.4,
-			attackType:attackTypes.areaAttack,  attackRange:8, 
-			attackPower:2, initialHealth:4*initialHealth, knockBacks:1,
-			speed:speedFactor*8, timeBetweenAttacks:2.23
-		},
+		// {...aCat, type:"wall", width:71, height:143, attackWidth: 160, walkingImageCount: 3, attackImageCount: 7, hurtWidth:80, 
+		// 	imageToLogicalPxFactor: 0.4,
+		// 	attackType:attackTypes.areaAttack,  attackRange:8, 
+		// 	attackPower:2, initialHealth:4*initialHealth, knockBacks:1,
+		// 	speed:speedFactor*8, timeBetweenAttacks:2.23
+		// },
 		{...aCat, type:"axe", width:53, height:63, attackWidth: 56, hurtWidth: 36, imageToLogicalPxFactor: 0.7, 
 			attackPower:25,  attackRange:3, initialHealth:2*initialHealth, speed:speedFactor*12, timeBetweenAttacks:1,
 		},// 106, 115, 75 x 126 
-		{...aCat, type:"sword", speed:speedFactor*12, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
+//		{...aCat, type:"sword", speed:speedFactor*12, width:48, height:63, attackWidth: 69, hurtWidth: 42, imageToLogicalPxFactor: 0.7},
 		{...aCat, type:"legs", width:90, height: 306, 
 			imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, 
 			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
@@ -223,16 +234,16 @@ function App() {
 			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:1.5, 
 			speed:speedFactor*30, timeBetweenAttacks:.3,  
 		},
-		{...aCat, type:"giraffe", width:100, height: 160, 
-			imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:5, attackWidth:168, hurtWidth:262, 
-			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
-			speed:speedFactor*30, timeBetweenAttacks:.3,  
-		},
-		{...aCat, type:"dragon", width:114, height: 183, 
-			imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:4, attackWidth:210, hurtWidth:120, 
-			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:22, 
-			speed:speedFactor*10, timeBetweenAttacks:2.3,  
-		},
+		// {...aCat, type:"giraffe", width:100, height: 160, 
+		// 	imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:5, attackWidth:168, hurtWidth:262, 
+		// 	initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
+		// 	speed:speedFactor*30, timeBetweenAttacks:.3,  
+		// },
+		// {...aCat, type:"dragon", width:114, height: 183, 
+		// 	imageToLogicalPxFactor:0.4, walkingImageCount:4, attackImageCount:4, attackWidth:210, hurtWidth:120, 
+		// 	initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:22, 
+		// 	speed:speedFactor*10, timeBetweenAttacks:2.3,  
+		// },
 	];
 	const initialPos = {
 		cats: [],
@@ -310,7 +321,7 @@ function App() {
 	function moveAll(x)
 	{
 		const t = x+1;
-		console.log(t)
+		// console.log(t)
 		moveCat(t);
 		moveDog(t);
 		// pass time in addition to position state (alternatively we might include time into the rest of state)
@@ -378,7 +389,7 @@ function App() {
 	}
 	function isDamageTime(unit, time)
 	{
-		return time - unit.lastAttackStart === unit.attackImageCount - 1;
+		return time - unit.lastAttackStart === unit.damageOn;
 	}
 	function canAttack(unit, target, oppositeTeam, time)
 	{
