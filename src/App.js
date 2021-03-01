@@ -1,3 +1,4 @@
+//import { getByAltText } from '@testing-library/react';
 import React, { useState } from 'react';
 import './App.css';
 console.log("v1");
@@ -7,6 +8,7 @@ const screenWidth = 320;
 const initialX = 25;
 const initialHealth = 100; // basic cat initial health (physical fitness) can grow to 4200, offensive power 335 with level, treasures, etc.
 const initialBaseHealth = 5000;
+const depth = 5;
 
 const baseFactor = 1.8;
 const baseWidth = baseFactor * 40;
@@ -69,7 +71,7 @@ function Cat(props) {
 	const style = {
 		width:f*(props.cat.isAttacking ? props.cat.attackWidth:props.cat.width),
 		height:f*props.cat.height,
-		right: props.cat.x, bottom: baseBottom,
+		right: props.cat.x, bottom: baseBottom + props.cat.y, zIndex:100-props.cat.y,
 		backgroundImage:`url('${props.cat.type}.png')`,
 		backgroundSize: getBackgroundSize(props.cat),
 		backgroundPositionX: getBackgroundPositionX(props.cat, props.time),
@@ -116,7 +118,7 @@ function Enemy(props) {
 	const style = {
 		width:f*(props.enemy.isAttacking ? props.enemy.attackWidth:props.enemy.width),
 		height:f*props.enemy.height,
-		left: props.enemy.x, bottom: baseBottom,
+		left: props.enemy.x, bottom: baseBottom +props.enemy.y,
 		backgroundImage:`url('${props.enemy.type}.png')`,
 		backgroundSize: getBackgroundSize(props.enemy),
 		backgroundPositionX: getBackgroundPositionX(props.enemy, props.time),
@@ -320,11 +322,6 @@ function App() {
 	function moveAll(x)
 	{
 		const t = x+1;
-<<<<<<< HEAD
-		// console.log(t)
-=======
-//		console.log(t)
->>>>>>> f6f7ac03d033b3a49f5970b675d5a39f39dbe006
 		moveCat(t);
 		moveDog(t);
 		// pass time in addition to position state (alternatively we might include time into the rest of state)
@@ -501,6 +498,7 @@ function App() {
 		const id = nextUnitId();
 		console.log(id, type.type);
 		return {...type, x:initialX, health:type.initialHealth, id:id,
+			y:getY(),
 			initialIndex: getRandomImageOffset(type), 
 			isAttacking: false, isIdle:false,
 			lastAttackStart: 0, 
@@ -522,6 +520,9 @@ function App() {
 		setPosition(x => ({...x, 
 			cats:[...x.cats, getUnit(type)]
 		}));
+	}
+	function getY(){
+		return depth*Math.floor(Math.random() * 5);
 	}
 	function getRandomImageOffset(type){
 		return Math.floor(Math.random() * type.walkingImageCount);
