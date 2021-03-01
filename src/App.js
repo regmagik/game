@@ -8,7 +8,7 @@ const screenWidth = 320;
 const initialX = 25;
 const initialHealth = 100; // basic cat initial health (physical fitness) can grow to 4200, offensive power 335 with level, treasures, etc.
 const initialBaseHealth = 5000;
-const depth = 5;
+const depth = 4;
 
 const baseFactor = 1.8;
 const baseWidth = baseFactor * 40;
@@ -54,7 +54,7 @@ function HealthBar({health, maxHealth, label}) {
 			backgroundColor: colorLeft,
 			borderLeftColor: colorLeft,
 			borderRightColor: colorRight,
-			opacity:'80%',
+			opacity:'40%',
 			borderWidth: borderWidth, borderRadius:2,
 			borderLeftWidth: borderLeftWidth, borderRightWidth:borderRightWidth,
 			borderStyle:'solid',
@@ -118,6 +118,7 @@ function Enemy(props) {
 	const style = {
 		width:f*(props.enemy.isAttacking ? props.enemy.attackWidth:props.enemy.width),
 		height:f*props.enemy.height,
+		zIndex:100-props.enemy.y,
 		left: props.enemy.x, bottom: baseBottom +props.enemy.y,
 		backgroundImage:`url('${props.enemy.type}.png')`,
 		backgroundSize: getBackgroundSize(props.enemy),
@@ -191,7 +192,7 @@ function App() {
 			speed:speedFactor*8, 
 		}, 
 //		todo: remove some images
-		{...unit, type: "baa", width:100, attackWidth: 110, hurtWidth:100, 
+		{...unit, type: "baa", width:100, attackWidth: 100, hurtWidth:100, 
 			height:87, attackImageCount:7, damageOn: 5, 
 			imageToLogicalPxFactor: .5, 
 			knockBacks:2, initialHealth:500, attackPower:50, attackRange:1.1, //110
