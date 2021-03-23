@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import './App.css';
 console.log("v1");
-const timerInterval = 200; 
+const timerInterval = 300; 
 const speedFactor = .5;	
 const screenWidth = 320;
 const initialX = 25;
@@ -40,6 +40,31 @@ function EnemyBase(props) {
 		backgroundImage:"url('leftbase.png')"
 	}
 	return <div className="EnemyBase" style={style}>{props.children}<HealthBar health={props.health} maxHealth={props.initialHealth}/></div>
+}
+function CooldownBar({cooldown, startTime, currentTime}) {
+	const width = buttonWidth, borderWidth = 0;
+	const height = 3;
+	let fraction = (currentTime - startTime) / cooldown;
+	if (fraction > 1) fraction = 1;
+	const borderLeftWidth = fraction*width;
+	const borderRightWidth = width - borderLeftWidth;
+	const colorLeft = 'blue';
+	const colorRight = 'white';
+	const styleHealthBar = {
+			position:"absolute", bottom: 0, left:0,
+			backgroundColor: colorLeft,
+			borderLeftColor: colorLeft,
+			borderRightColor: colorRight,
+			opacity:'90%',
+			borderWidth: borderWidth, //borderRadius:2,
+			borderLeftWidth: borderLeftWidth, borderRightWidth:borderRightWidth,
+			borderStyle:'solid',
+			width: 0, // consider using box model
+			height: height,
+			padding:0,//marginLeft:"auto",//flexGrow:0,flexShrink:0,
+		}
+	  
+		return <div style={styleHealthBar} />
 }
 function HealthBar({health, maxHealth, label}) {
 	const width = 24, borderWidth = 0;
@@ -131,16 +156,22 @@ function Enemy(props) {
 }
 
 function CatButton(props) {
+	const active = props.time - props.cooldownStarted > props.type.cooldown;
 	function onAdd(){
-		props.addCat(props.type)
+		console.log("onAdd", props.type.type, "time", props.time, "cooldown", props.type.cooldown);
+		// check cooldown
+		if(active)
+			props.addCat(props.type, props.time)
 	}
 	const buttonStyle = {
+		position: "relative",
 		width:buttonWidth,
 		height:buttonH,
 		float:"right",
 //		border: 1, borderColor:"white", borderWidth: 1, borderStyle: 'solid',
 		marginLeft: 1,
 		paddingBottom: 1,
+		opacity: active ? '100%' : '20%',
 	}
 	
 	var scale = props.type.imageToLogicalPxFactor*buttonWidth/props.type.width;
@@ -153,7 +184,10 @@ function CatButton(props) {
 		backgroundPosition: "left bottom",
 		margin:"auto"
 	}
-	return <div style={buttonStyle} onClick={onAdd}><div style={imgStyle}></div></div>
+	return <div style={buttonStyle} onClick={onAdd}>
+		<div style={imgStyle}></div>
+		<CooldownBar cooldown={props.type.cooldown} startTime={props.cooldownStarted} currentTime={props.time} />
+	</div>
 }
 function EnemyButton(props) {
 	function onAdd(){
@@ -208,7 +242,7 @@ function App() {
 	//	{...unit, type:"croco", width:35, height:15, speed:speedFactor*3, attackPower:4},
 	];
 
-	const aCat = {...unit, type:"A", speed:speedFactor*10}
+	const aCat = {...unit, type:"A", speed:speedFactor*10, cooldown: 33}
 	const catTypes = [
 		{...aCat, width:50, height:58, attackWidth:48, attackImageCount: 3, damageOn: 2,
 			imageToLogicalPxFactor: 0.5,
@@ -234,7 +268,7 @@ function App() {
 		{...aCat, type:"legs", width:90, height: 306, 
 			imageToLogicalPxFactor:0.4, walkingImageCount:5, attackWidth:250, 
 			initialHealth:4*initialHealth, attackPower:initialHealth, attackRange:3.5, 
-			speed:speedFactor*10, timeBetweenAttacks:4.6,  
+			speed:speedFactor*10, timeBetweenAttacks:4.6, cooldown: 66,  
 		},
 		{...aCat, type:"cow", width:109, height: 120, 
 			imageToLogicalPxFactor:0.4, walkingImageCount:4, attackWidth:150, hurtWidth:156,
@@ -262,6 +296,12 @@ function App() {
 	const [beforeBattle, setBefore] = useState(true);
 	const [inBattle, setBattle] = useState(true);
 	const [position, setPosition] = useState(initialPos);
+
+	const initialButtons = catTypes.map(type => ({
+		type: type,
+		cooldownStarted: 0,
+	}));
+	const [buttons, setButtons] = useState(initialButtons);
 	const [time, setTime] = useState(0);
 
 	function startBattle()
@@ -322,14 +362,17 @@ function App() {
 
 	function moveAll(x)
 	{
-		const t = x+1;
+		const t = x;
 		moveCat(t);
 		moveDog(t);
 		// pass time in addition to position state (alternatively we might include time into the rest of state)
 		setPosition(pos=>attack(pos, t));
+		// setButtons(buttons => {
+		// 	return buttons.map(button => button);
+		// });
 	// automatically add enemies
 		if(t%45===5) setPosition(sendEnemy);
-		return t;
+		return t+1;
 	}
 
 	// React.useEffect( () => {	console.log("useEffect");
@@ -511,8 +554,8 @@ function App() {
 			if(!x){ console.log("starting battle..."); startBattle(); return 1; } 
 			return x+1});
 	}
-	function addCat(type){
-		console.log("add cat", type.type);
+	function addCat(type, time){
+		console.log("add cat", type.type, "time", time);
 //		const f = 1;
 //		console.log(type.type, "width", f*type.width, "attack width", f*type.attackWidth, "total width", f*getTotalWidth(type));
 //		const walk = f*type.width*type.walkingImageCount, attack = f*type.attackWidth*type.attackImageCount;
@@ -521,6 +564,9 @@ function App() {
 		setPosition(x => ({...x, 
 			cats:[...x.cats, getUnit(type)]
 		}));
+		setButtons(buttons => buttons.map(
+			b => b.type.type === type.type ? ({...b, cooldownStarted: time}) : b
+		));
 	}
 	function getY(){
 		return depth*Math.floor(Math.random() * 5);
@@ -539,7 +585,7 @@ function App() {
 	}
 
 	const enemyButtons = enemyTypes.map((enemy, i)=><EnemyButton type={enemy} addEnemy={addEnemy} key={i}/>);
-	const catButtons = catTypes.map((cat, i)=><CatButton type={cat} addCat={addCat} key={i}/>);
+	const catButtons = buttons.map((button, i)=><CatButton type={button.type} cooldownStarted={button.cooldownStarted} addCat={addCat} time={time} key={i}/>);
 	const gameControls = <>
 		<div>Click to send cats into the battle:</div>
 		<div className="dashboard">
