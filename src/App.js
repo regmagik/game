@@ -1,8 +1,11 @@
 //import { getByAltText } from '@testing-library/react';
 import React, { useState } from 'react';
 import './App.css';
-console.log("v1");
-const timerInterval = 300; 
+console.log("v2 - added music");
+const music = new Audio('music.mp3');
+const biteSound = new Audio('bite.mp3');
+
+const timerInterval = 1000/3; 
 const speedFactor = .5;	
 const screenWidth = 320;
 const initialX = 25;
@@ -156,7 +159,7 @@ function Enemy(props) {
 }
 
 function CatButton(props) {
-	const active = props.time - props.cooldownStarted > props.type.cooldown;
+	const active = !props.cooldownStarted || props.time - props.cooldownStarted > props.type.cooldown;
 	function onAdd(){
 		console.log("onAdd", props.type.type, "time", props.time, "cooldown", props.type.cooldown);
 		// check cooldown
@@ -184,9 +187,12 @@ function CatButton(props) {
 		backgroundPosition: "left bottom",
 		margin:"auto"
 	}
+	var cooldown = active ? null : 
+	<CooldownBar cooldown={props.type.cooldown} startTime={props.cooldownStarted} currentTime={props.time} />
+	;
 	return <div style={buttonStyle} onClick={onAdd}>
 		<div style={imgStyle}></div>
-		<CooldownBar cooldown={props.type.cooldown} startTime={props.cooldownStarted} currentTime={props.time} />
+		{cooldown}
 	</div>
 }
 function EnemyButton(props) {
@@ -346,6 +352,7 @@ function App() {
 	}
 	function startTimer()
 	{
+		music.loop = true; if(music.paused) music.play();
 		if(document.timer === undefined)
 		{
 			console.log("setInterval", timerInterval)
@@ -358,6 +365,8 @@ function App() {
 		clearInterval(document.timer);
 		console.log("clearInterval", document.timer)
 		document.timer = undefined;
+console.log('stop music');
+music.pause();
 	}
 
 	function moveAll(x)
@@ -455,9 +464,15 @@ function App() {
 		const attackers = others.filter((foe)=>canAttack(foe, targret, team, t));
 		const damage = attackers.reduce((a, b) => b.attackPower == null ? a : (a + b.attackPower), 0);
 		if(damage > targret.health)
+{
+biteSound.play();
 			console.log(targret.type, targret.id, "is dead.")
+}
 		else if(damage > 0)
+{
+biteSound.play();
 			console.log(targret.type, targret.id, "damage", damage)
+}
 		const newUnit = {...targret, health: targret.health - damage, 
 			x:isKnockback(targret, damage) ? (targret.x - 30) : targret.x}
 		
@@ -521,6 +536,10 @@ function App() {
 			stopTimer()
 			newEnemyBaseHealth = 0;
 		}
+if(damageBase(x.cats, t+2) || damageBase(x.enemies, t+2)){
+biteSound.play();
+}
+
 		return {...x, ...calculateHealth(x, t), 
 			catBaseHealth:newCatBaseHealth, 
 			enemyBaseHealth:newEnemyBaseHealth}; 
@@ -625,7 +644,7 @@ function App() {
 		<button onClick={resumeBattle}>Resume</button>	
 		<button onClick={restartBattle}>Restart</button>	
 		<button onClick={leaveBattle}>Back</button>	
-		<button onClick={debugBattle}>Debug</button>	
+		<button onClick={debugBattle}>Step</button>	
 		</> : null;	
 		
   return (
